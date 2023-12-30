@@ -4,13 +4,14 @@
 
 #include <iostream>
 
-DrawableLines::DrawableLines()
+DrawableLines::DrawableLines(const std::string &name)
 {
 	// Create and compile our GLSL program from the shaders
 	mLineShader = new Shader(Shader::mObjectToDraw::mLine);
 	std::cout << "mLineShader\n";
 	mLineShader->LoadShaders(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/line.vs").c_str(), 
 							 DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/line.fs").c_str());
+	mName = name;
 }
 
 DrawableLines::~DrawableLines()
@@ -70,6 +71,10 @@ int DrawableLines::GetTotalLines()
 	return mLineData.size();
 }
 
+std::string DrawableLines::GetName()
+{
+	return mName;
+}
 void DrawableLines::UpdateLinePosition(int index, glm::vec3 pos1, glm::vec3 pos2)
 {
 	if(index < 0 || index >= mLineData.size()) return;

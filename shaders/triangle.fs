@@ -5,6 +5,7 @@ in vec3 FragPos;
 out vec4 out_FragColor;
 uniform vec3 u_lightPos;
 uniform vec3 u_lightColor;
+uniform float u_transparency;
 void main()
 {
     // ambient
@@ -18,7 +19,7 @@ void main()
     vec3 diffuse = diff * u_lightColor;
             
     vec3 result = (ambient + diffuse) * color;
-    out_FragColor = vec4(result, 1.0);
+    out_FragColor = vec4(result, u_transparency);
 	
 	
     //out_FragColor = vec4(color, 1.0);

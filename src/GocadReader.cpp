@@ -12,16 +12,15 @@ GocadReader::GocadReader()
 {
     //ctor
 	std::cout << "aGridLines\n";
-	aGridLines = new DrawableLines();
+	aGridLines = new DrawableLines("Grid");
 	std::cout << "aSkeletonLines\n";
-	aSkeletonLines = new DrawableLines();
-	/*
+	aSkeletonLines = new DrawableLines("Skeleton");
 	std::cout << "aCellLines\n";
-	aCellLines = new DrawableLines();
+	aCellLines = new DrawableLines("Orthogonal Basis");
 	std::cout << "aCellSpheres\n";
-	aCellSpheres = new DrawableSpheres();*/
+	aCellSpheres = new DrawableSpheres("Samples");
 	std::cout << "aEnvelopeTri\n";
-	aEnvelopeTri = new DrawableTriangles();
+	aEnvelopeTri = new DrawableTriangles("Envelope");
 	
 }
 
@@ -46,7 +45,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
     glm::dvec3 min_pt{ INT_MAX};
     glm::dvec3 max_pt{-INT_MAX};
     
-    const glm::dvec3 grid_color(1.0, 0.0, 0.0);
+    const glm::dvec3 grid_color(0.8, 0.8, 0.8);
 	glm::dvec3 iline_color(0.0, 0.0, 0.0);
 	glm::dvec3 envelope_color(0.0, 0.0, 0.0);
     glm::dvec3 v_origin{0.0}, v_side{0.0}, v_tangent{0.0}, v_up{0.0};
@@ -97,7 +96,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
             readGrid = false;
             readEnvelope = false;
             readSkeleton = false;
-            //readCells = true;
+            readCells = true;
             continue;
         }
         
@@ -281,37 +280,37 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 		        if(origin)
 		        {
 		            v_origin = pt;
-		            ///aCellSpheres->PushSphere(pt, glm::vec3(0.5, 0.0, 0.0), 0.5);
+		            aCellSpheres->PushSphere(pt, glm::vec3(0.5, 0.0, 0.0), 0.5);
 		            //std::cout<<"origin "<<pt.x<<" "<<pt.y<<" "<<pt.z<<"\n";
 		        }
 		        else if(in)
 		        {
-		            ///aCellSpheres->PushSphere(pt, glm::vec3(0.0, 0.0, 0.8), 0.5);
+		            aCellSpheres->PushSphere(pt, glm::vec3(0.0, 0.0, 0.8), 0.5);
 		            //std::cout<<"in "<<pt.x<<" "<<pt.y<<" "<<pt.z<<"\n";
 		        }
 				else if (out)
 				{
-					//aCellSpheres->PushSphere(pt, glm::vec3(0.0, 0.5, 0.0), 0.5);
+					aCellSpheres->PushSphere(pt, glm::vec3(0.0, 0.5, 0.0), 0.5);
 					//std::cout << "out " << pt.x << " " << pt.y << " " << pt.z << "\n";
 				}
 				else if (maximpactleft || maximpactright)
 				{
-					//aCellSpheres->PushSphere(pt, glm::vec3(0.0, 0.0, 0.0), 0.5);
+					aCellSpheres->PushSphere(pt, glm::vec3(0.0, 0.0, 0.0), 0.5);
 					//std::cout << "maximpact left/right " << pt.x << " " << pt.y << " " << pt.z << "\n";
 				}
 				else if (maximpactup || maximpactdown)
 				{
-					//aCellSpheres->PushSphere(pt, glm::vec3(0.0, 0.0, 0.0), 0.5);
+					aCellSpheres->PushSphere(pt, glm::vec3(0.0, 0.0, 0.0), 0.5);
 					//std::cout << "maximpact up/down " << pt.x << " " << pt.y << " " << pt.z << "\n";
 				}
 				else if (impactup || impactdown)
 				{
-					//aCellSpheres->PushSphere(pt, glm::vec3(0.5, 0.5, 0.5), 0.5);
+					aCellSpheres->PushSphere(pt, glm::vec3(0.5, 0.5, 0.5), 0.5);
 					//std::cout << "impact up/down " << pt.x << " " << pt.y << " " << pt.z << "\n";
 				}
 				else if (impactleft || impactright)
 				{
-					//aCellSpheres->PushSphere(pt, glm::vec3(0.5, 0.5, 0.5), 0.5);
+					aCellSpheres->PushSphere(pt, glm::vec3(0.5, 0.5, 0.5), 0.5);
 					//std::cout << "impact left/right " << pt.x << " " << pt.y << " " << pt.z << "\n";
 				}
 		        else
@@ -329,7 +328,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
                         }
 		            }
 		            pt = v_origin+pt*5.0;
-		            ///aCellLines->PushLine(v_origin, pt, glm::vec3(0.8, 0.0, 0.0));
+		            aCellLines->PushLine(v_origin, pt, glm::vec3(0.8, 0.0, 0.0));
 		            //std::cout<<"pt "<<pt.x<<" "<<pt.y<<" "<<pt.z<<"\n";
 		        }
             }
@@ -460,17 +459,18 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
         aSkeletonLines->TranslateLinePosition(i, -center);
     }
 	aSkeletonLines->Update();
-    /*
     for(int i = 0; i < aCellLines->GetTotalLines() ; i++)
     {
         aCellLines->RotateLinePosition(i, rotation, center);
-        aCellLines->TranslateLinePosition(i, -center, -center);
+        aCellLines->TranslateLinePosition(i, -center);
     }
+	aCellLines->Update();
 	for (int i = 0; i < aCellSpheres->GetTotalSpheres(); i++)
 	{
 		aCellSpheres->RotateSpherePosition(i, rotation, center);
 		aCellSpheres->TranslateSpherePosition(i, -center);
-	}*/
+	}
+	aCellSpheres->Update();
 	/*for (int i = 0; i < aEnvelopeTri->GetTotalTriangles(); i++)
 	{
 		aEnvelopeTri->RotateTrianglePosition(i, rotation, center);
@@ -494,7 +494,6 @@ DrawableLines* GocadReader::GetGridLines()
     return aGridLines;
 }
 
-/*
 DrawableLines* GocadReader::GetCellLines()
 {
     return aCellLines;
@@ -503,7 +502,6 @@ DrawableSpheres* GocadReader::GetCellSpheres()
 {
     return aCellSpheres;
 }
-*/
 DrawableTriangles* GocadReader::GetEnvelopetriangles()
 {
 	return aEnvelopeTri;

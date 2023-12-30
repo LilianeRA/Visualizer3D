@@ -2,6 +2,7 @@
 #define DRAWABLETRIANGLES_H
 
 #include "Shader.h"
+#include "DrawableLines.h"
 
 //GLM Math Headers
 #include <glm/vec3.hpp> // glm::vec3
@@ -13,23 +14,24 @@
 class DrawableTriangles
 {
     public:
-        DrawableTriangles();
+        DrawableTriangles(const std::string &name);
         virtual ~DrawableTriangles();
 		
-        void Draw(const glm::vec3 &lightPos, const glm::vec3 &lightColor);
+        void Draw(const glm::vec3 &lightPos, const glm::vec3 &lightColor, const float transparency, bool wireframe=false);
 
 		void SetBuffers(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals, const glm::vec3 &color, const std::vector<GLuint> &indices);
         //void PushTriangle(const glm::vec3 &pos1, const glm::vec3 &pos2, const glm::vec3 &pos3, const glm::vec3 &normal, const glm::vec3 &color);
 		void Update();
 
         int GetTotalTriangles();
+        std::string GetName();
 
 		void RotateTriangles(const glm::mat3 &rotation, const glm::vec3 &rot_pt);
 		void TranslateTriangles(const glm::vec3 &translation);
 
-        void RotateTrianglePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt);
+        /*void RotateTrianglePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt);
         void TranslateTrianglePosition(int index, const glm::vec3 &translation);
-        /*void PopTriangle();
+        void PopTriangle();
 
 
         void UpdateTrianglePosition(int index, const glm::vec3 &pos1, const glm::vec3 &pos2, const glm::vec3 &pos3);
@@ -55,6 +57,9 @@ class DrawableTriangles
 		std::vector<GLuint> mIndices;
 		glm::vec3 mColor;
 
+		std::string mName;
+
+		DrawableLines *mWireframe;
 		Shader *mTriangleShader;
         
 };

@@ -363,7 +363,7 @@ void Shader::SetModelviewMatrix()
 }
 
 void Shader::DrawShader(const std::vector<glm::vec3> *offset, const std::vector<GLfloat> *radius, const std::vector<glm::vec3> *colors,
-	const glm::vec3 *lightPos, const glm::vec3 *lightColor)
+	const glm::vec3 *lightPos, const glm::vec3 *lightColor, const float transparency)
 {
 	glCheckError();
 	glUseProgram(mProgramID);
@@ -420,6 +420,7 @@ void Shader::DrawShader(const std::vector<glm::vec3> *offset, const std::vector<
 		glCheckError();
 		mSetUniformVec3("u_lightPos", *lightPos);
 		mSetUniformVec3("u_lightColor", *lightColor);
+		mSetUniform1f("u_transparency", transparency);
 		glDrawElements(GL_TRIANGLES, mNumberOfIndices, GL_UNSIGNED_INT, 0);
 		glCheckError();
 	}

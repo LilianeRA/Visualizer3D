@@ -38,7 +38,8 @@ public:
 					const std::vector<GLfloat> *radius = nullptr, 
 					const std::vector<glm::vec3> *colors = nullptr,
 					const glm::vec3 *lightPos = nullptr, 
-					const glm::vec3 *lightColor = nullptr);
+					const glm::vec3 *lightColor = nullptr, 
+					const float transparency = 1.0f);
 	/*void SetRadius(std::vector<GLfloat> &radius);
 	void SetOffset(std::vector<glm::vec3> &offset);
 	void UseShader();

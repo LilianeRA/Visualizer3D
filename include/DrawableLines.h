@@ -13,7 +13,7 @@
 class DrawableLines
 {
     public:
-        DrawableLines();
+        DrawableLines(const std::string &name);
         virtual ~DrawableLines();
         
         void PushLine(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color);
@@ -21,6 +21,7 @@ class DrawableLines
         void Draw();
 
         int GetTotalLines();
+        std::string GetName();
 
         void UpdateLinePosition(int index, glm::vec3 pos1, glm::vec3 pos2);
         void RotateLinePosition(int index, const glm::dmat3 &rotation, const glm::dvec3 &rot_pt);
@@ -43,6 +44,7 @@ class DrawableLines
 		
         std::vector<mLine*> mLineData;
 
+		std::string mName;
 		Shader *mLineShader;
         
 };

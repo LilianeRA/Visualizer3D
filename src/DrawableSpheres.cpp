@@ -28,7 +28,7 @@ GLenum glCheckError_2(const char *file, int line)
 #define glCheckError2() glCheckError_2(__FILE__, __LINE__) 
 
 
-DrawableSpheres::DrawableSpheres(int slices, int stacks) :
+DrawableSpheres::DrawableSpheres(const std::string &name, int slices, int stacks) :
 	mSlices(slices), mStacks(stacks), mNumberOfVerticesPerSphere(0)
 {
 	// Create and compile our GLSL program from the shaders
@@ -36,7 +36,7 @@ DrawableSpheres::DrawableSpheres(int slices, int stacks) :
 	std::cout << "mSphereShader\n";
 	mSphereShader->LoadShaders(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/sphere.vs").c_str(), 
 							   DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/sphere.fs").c_str() );
-
+	mName = name;
 }
 
 DrawableSpheres::~DrawableSpheres()
@@ -138,38 +138,40 @@ void DrawableSpheres::Update()
 	colors.clear();
 	offset.clear();*/
 }
-/*
+
 int DrawableSpheres::GetTotalSpheres()
 {
-	return mSphereData.size();
+	return mPosition.size();
 }
 
+std::string DrawableSpheres::GetName()
+{
+	return mName;
+}
+/*
 void DrawableSpheres::UpdateSpherePosition(int index, glm::vec3 position)
 {
 	if(index < 0 || index >= mSphereData.size()) return;
 	mSphereData.at(index)->mPosition = position;
 	Upload();
-}
+}*/
 
-void DrawableSpheres::RotateSpherePosition(int index, const glm::dmat3 &rotation, const glm::dvec3 &rot_pt)
+void DrawableSpheres::RotateSpherePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt)
 {
-	if(index < 0 || index >= mSphereData.size()) return;
-	glm::dvec3 p1 = mSphereData.at(index)->mPosition;
+	if(index < 0 || index >= mPosition.size()) return;
+	glm::vec3 p1 = mPosition.at(index);
 	p1 = rotation*(p1 - rot_pt) + rot_pt;
 	
-	mSphereData.at(index)->mPosition = p1;
-	
-	Upload();
+	mPosition.at(index) = p1;
 }
 
 
 void DrawableSpheres::TranslateSpherePosition(int index, glm::vec3 position)
 {
-	if(index < 0 || index >= mSphereData.size()) return;
-	mSphereData.at(index)->mPosition += position;
-	Upload();
+	if(index < 0 || index >= mPosition.size()) return;
+	mPosition.at(index) += position;
 }
-
+/*
 void DrawableSpheres::UpdateSphereColor(int index, glm::vec3 color)
 {
 	if(index < 0 || index >= mSphereData.size()) return;

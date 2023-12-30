@@ -52,6 +52,10 @@ WindowGLFW::WindowGLFW(bool bidimensional, const std::string &title, int width, 
     mMouse = nullptr;*/
     mDrawableSpheres = nullptr;
 	mAxis = nullptr;
+	mEnvelopeTransparency = 1.0f;
+	mGridTransparency = 0.5f;
+	mEnvelopeWireframe = false;
+	mGridLines = true;
 
 	mLightPos = glm::vec3{ 102.0f, 100.0f, 200.0f };
 	mLightColor = glm::vec3{ 1.0f, 1.0f, 1.0f };
@@ -170,6 +174,8 @@ void WindowGLFW::InitializeWindow()
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glClearColor(0.95, 0.95, 0.95, 1.0f); // will possibly be changed by ImGUI
 
     //Callback de teclas
@@ -203,7 +209,7 @@ void WindowGLFW::InitializeAxisShaders()
 {
 	float length = 100.0f;
 	std::cout << "mDrawableLines (axis)\n";
-	mAxis = new DrawableLines();
+	mAxis = new DrawableLines("Axis");
 
 	mAxis->PushLine(glm::vec3(0.0, 0.0, 0.0), glm::vec3(length, 0.0, 0.0), glm::vec3(1.0, 0.0, 0.0));
 	mAxis->PushLine(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, length, 0.0), glm::vec3(0.0, 1.0, 0.0));
@@ -235,7 +241,7 @@ void WindowGLFW::InitializeAxisShaders()
 
 void WindowGLFW::InitializeSpheresShaders()
 {
-	mDrawableSpheres = new DrawableSpheres();
+	mDrawableSpheres = new DrawableSpheres("Generic Spheres");
 	mDrawableSpheres->PushSphere(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.5, 0.0), 2.0);
 	mDrawableSpheres->PushSphere(glm::vec3(10.0, 10.0, 0.0), glm::vec3(0.0, 0.0, 0.5), 4.0);
 	mDrawableSpheres->Update();
@@ -255,7 +261,7 @@ void WindowGLFW::Run()
     //InitializeWindow();
     ResetTime();
     InitializeAxisShaders();
-    InitializeSpheresShaders();
+    //InitializeSpheresShaders();
 
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	bool show_demo_window = true;
@@ -274,7 +280,6 @@ void WindowGLFW::Run()
 
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 		{
-			static float f = 0.0f;
 			static int counter = 0;
 
 			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
@@ -282,8 +287,11 @@ void WindowGLFW::Run()
 			ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 
-			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-			ImGui::SliderFloat3("Light Pos", &mLightPos.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Grid Transparency", &mGridTransparency, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat("Envelope Transparency", &mEnvelopeTransparency, 0.0f, 1.0f);            
+			ImGui::Checkbox("Envelope Lines", &mEnvelopeWireframe);      
+			ImGui::Checkbox("Grid lines", &mGridLines);      
+			ImGui::SliderFloat3("Light Pos", &mLightPos.x, -3000.0f, 3000.0f);            
 			ImGui::ColorEdit3("Light Color", (float*)&mLightColor); // Edit 3 floats representing a color
 			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
@@ -363,19 +371,24 @@ void WindowGLFW::Draw()
 	mAxisShader->DisableVertexAttribArrayColor();*/
 
 	mAxis->Draw();
-	mDrawableSpheres->Draw(mLightPos, mLightColor);
+	//mDrawableSpheres->Draw(mLightPos, mLightColor);
 	
+
 	for(const auto dl : mOtherLines)
 	{
-	    dl->Draw();
+		if(dl->GetName().find("Grid") == std::string::npos)
+			dl->Draw();
+		else
+			if(mGridLines)
+				dl->Draw();
 	}
-	/*for(const auto ds : mOtherSpheres)
+	for(const auto ds : mOtherSpheres)
 	{
-	    ds->Draw();
-	}*/
+	    ds->Draw(mLightPos, mLightColor);
+	}
 	for(const auto dt : mOtherTriangles)
 	{
-	    dt->Draw(mLightPos, mLightColor);
+	    dt->Draw(mLightPos, mLightColor, mEnvelopeTransparency, mEnvelopeWireframe);
 	}
 
 
@@ -508,7 +521,6 @@ void WindowGLFW::AppendDrawableLine(DrawableLines *dl)
     }
 }   
 
-/*
 void WindowGLFW::AppendDrawableSphere(DrawableSpheres *ds)
 {
     if(ds)
@@ -518,7 +530,6 @@ void WindowGLFW::AppendDrawableSphere(DrawableSpheres *ds)
     }
 
 }
-*/
 void WindowGLFW::AppendDrawableTriangle(DrawableTriangles *dt)
 {
     if(dt)

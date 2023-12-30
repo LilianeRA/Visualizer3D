@@ -3,15 +3,18 @@
 
 #include <iostream>
 
-DrawableTriangles::DrawableTriangles()
+DrawableTriangles::DrawableTriangles(const std::string &name)
 {
 	mTriangleShader = nullptr;
 
 	// Create and compile our GLSL program from the shaders
 	mTriangleShader = new Shader(Shader::mObjectToDraw::mTriangle);
 	std::cout << "mTriangleShader\n";
-	mTriangleShader->LoadShaders(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/triangle.vs").c_str(), 
-								 DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/triangle.fs").c_str()); 
+	mTriangleShader->LoadShaders(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/triangle.vs").c_str(),
+								 DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/triangle.fs").c_str());
+
+	mName = name;
+	mWireframe = new DrawableLines(name+" wireframe");
 }
 
 DrawableTriangles::~DrawableTriangles()
@@ -22,9 +25,11 @@ DrawableTriangles::~DrawableTriangles()
 	mIndices.clear();
 }
 
-void DrawableTriangles::Draw(const glm::vec3 &lightPos, const glm::vec3 &lightColor)
+void DrawableTriangles::Draw(const glm::vec3 &lightPos, const glm::vec3 &lightColor, const float transparency, bool wireframe)
 {
-	mTriangleShader->DrawShader(nullptr, nullptr, nullptr, &lightPos, &lightColor);
+	if(wireframe)
+		mWireframe->Draw();
+	mTriangleShader->DrawShader(nullptr, nullptr, nullptr, &lightPos, &lightColor, transparency);
 }
 
 
@@ -50,6 +55,8 @@ void DrawableTriangles::Update()
 	std::vector<glm::vec3> colors(mVertices.size(), mColor);
 	mTriangleShader->SetBuffers(mVertices, mIndices, &colors, &mNormals);
 	colors.clear();
+
+	mWireframe->Update();
     /*std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec3> colors;
@@ -92,18 +99,31 @@ void DrawableTriangles::SetBuffers(const std::vector<glm::vec3> &vertices, const
 		mVertices.push_back(vertices.at(i));
 		mNormals.push_back(normals.at(i));
 	}
+
 	for (const GLuint ind : indices)
 	{
 		mIndices.push_back(ind);
 	}
 	mColor = color;
 
+	for (unsigned int i = 0; i < mIndices.size()-2; i += 3)
+	{
+		mWireframe->PushLine(mVertices.at(mIndices.at(i  )), mVertices.at(mIndices.at(i+1)), glm::vec3(0));
+		mWireframe->PushLine(mVertices.at(mIndices.at(i  )), mVertices.at(mIndices.at(i+2)), glm::vec3(0));
+		mWireframe->PushLine(mVertices.at(mIndices.at(i+1)), mVertices.at(mIndices.at(i+2)), glm::vec3(0));
+	}
 	//Update();
 }
 
 int DrawableTriangles::GetTotalTriangles()
 {
 	return int(mIndices.size()/3);
+}
+
+
+std::string DrawableTriangles::GetName()
+{
+	return mName;
 }
 
 /*
@@ -117,27 +137,16 @@ void DrawableTriangles::UpdateTrianglePosition(int index, const glm::vec3 &pos1,
 }*/
 
 
-void DrawableTriangles::RotateTrianglePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt)
-{
-	if(index < 0 || index >= GetTotalTriangles()) return;
-	int ind = index * 3;
-	glm::vec3 p1 = mVertices.at(mIndices.at(ind  ));
-	glm::vec3 p2 = mVertices.at(mIndices.at(ind+1));
-	glm::vec3 p3 = mVertices.at(mIndices.at(ind+2));
-	p1 = rotation*(p1 - rot_pt) + rot_pt;
-	p2 = rotation*(p2 - rot_pt) + rot_pt;
-	p3 = rotation*(p3 - rot_pt) + rot_pt;
-	
-	mVertices.at(mIndices.at(ind  )) = p1;
-	mVertices.at(mIndices.at(ind+1)) = p2;
-	mVertices.at(mIndices.at(ind+2)) = p3;
-}
 
 void DrawableTriangles::RotateTriangles(const glm::mat3 &rotation, const glm::vec3 &rot_pt)
 {
 	for (unsigned int i = 0; i < mVertices.size(); i++)
 	{
 		mVertices.at(i) = rotation * (mVertices.at(i) - rot_pt) + rot_pt;
+	}
+	for (int i = 0; i < mWireframe->GetTotalLines(); i++)
+	{
+		mWireframe->RotateLinePosition(i, rotation, rot_pt);
 	}
 	/*glm::dvec3 p1 = mTriangleData.at(index)->mPosition1;
 	glm::dvec3 p2 = mTriangleData.at(index)->mPosition2;
@@ -159,8 +168,27 @@ void DrawableTriangles::TranslateTriangles(const glm::vec3 &translation)
 	{
 		mVertices.at(i) += translation;
 	}
+	for (int i = 0; i < mWireframe->GetTotalLines(); i++)
+	{
+		mWireframe->TranslateLinePosition(i, translation);
+	}
 }
 
+/*void DrawableTriangles::RotateTrianglePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt)
+{
+	if (index < 0 || index >= GetTotalTriangles()) return;
+	int ind = index * 3;
+	glm::vec3 p1 = mVertices.at(mIndices.at(ind));
+	glm::vec3 p2 = mVertices.at(mIndices.at(ind + 1));
+	glm::vec3 p3 = mVertices.at(mIndices.at(ind + 2));
+	p1 = rotation * (p1 - rot_pt) + rot_pt;
+	p2 = rotation * (p2 - rot_pt) + rot_pt;
+	p3 = rotation * (p3 - rot_pt) + rot_pt;
+
+	mVertices.at(mIndices.at(ind)) = p1;
+	mVertices.at(mIndices.at(ind + 1)) = p2;
+	mVertices.at(mIndices.at(ind + 2)) = p3;
+}
 void DrawableTriangles::TranslateTrianglePosition(int index, const glm::vec3 &translation)
 {
 	if (index < 0 || index >= GetTotalTriangles()) return;
@@ -169,7 +197,8 @@ void DrawableTriangles::TranslateTrianglePosition(int index, const glm::vec3 &tr
 	mVertices.at(mIndices.at(ind+1)) += translation;
 	mVertices.at(mIndices.at(ind+2)) += translation;
 }
-/*void DrawableTriangles::UpdateTriangleColor(int index, const glm::vec3 &color)
+
+void DrawableTriangles::UpdateTriangleColor(int index, const glm::vec3 &color)
 {
 	if(index < 0 || index >= mTriangleData.size()) return;
 	mTriangleData.at(index)->mColor = color;

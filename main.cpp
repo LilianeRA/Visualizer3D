@@ -1097,8 +1097,8 @@ int main(int argc, char** args)
 	gr->ReadDebugLogger(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../DebugLogger.txt"));
 	glfw->AppendDrawableLine(gr->GetGridLines());
 	glfw->AppendDrawableLine(gr->GetSkeletonLines());
-	/*glfw->AppendDrawableLine(gr->GetCellLines());
-	glfw->AppendDrawableSphere(gr->GetCellSpheres());*/
+	glfw->AppendDrawableLine(gr->GetCellLines());
+	glfw->AppendDrawableSphere(gr->GetCellSpheres());
 	glfw->AppendDrawableTriangle(gr->GetEnvelopetriangles());
 	glfw->Run();
 

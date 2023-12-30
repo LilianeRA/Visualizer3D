@@ -20,7 +20,7 @@ class WindowGLFW
 
         void InitializeWindow();
         void AppendDrawableLine(DrawableLines *dl);
-		/*void AppendDrawableSphere(DrawableSpheres *ds);*/
+		void AppendDrawableSphere(DrawableSpheres *ds);
 		void AppendDrawableTriangle(DrawableTriangles *dt);
         void Run();
 
@@ -55,11 +55,14 @@ class WindowGLFW
         DrawableSpheres *mDrawableSpheres;
 		glm::vec3 mLightPos;
 		glm::vec3 mLightColor;
+		float mEnvelopeTransparency;
+		float mGridTransparency;
+		bool mEnvelopeWireframe;
+		bool mGridLines;
         
 
         std::vector<DrawableLines*> mOtherLines;
-		/*
-		std::vector<DrawableSpheres*> mOtherSpheres;*/
+		std::vector<DrawableSpheres*> mOtherSpheres;
 		std::vector<DrawableTriangles*> mOtherTriangles;
 
         void Draw();
