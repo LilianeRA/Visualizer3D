@@ -1,0 +1,11 @@
+E:\GIT\Visualizer3D\main.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\main.obj
+E:\GIT\Visualizer3D\mainGLFW_IMGUI.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\mainGLFW_IMGUI.obj
+E:\GIT\Visualizer3D\src\Camera3D.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\Camera3D.obj
+E:\GIT\Visualizer3D\src\DirUtils.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\DirUtils.obj
+E:\GIT\Visualizer3D\src\DrawableLines.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\DrawableLines.obj
+E:\GIT\Visualizer3D\src\DrawableSpheres.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\DrawableSpheres.obj
+E:\GIT\Visualizer3D\src\DrawableTriangles.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\DrawableTriangles.obj
+E:\GIT\Visualizer3D\src\GocadReader.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\GocadReader.obj
+E:\GIT\Visualizer3D\src\Mouse.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\Mouse.obj
+E:\GIT\Visualizer3D\src\Shader.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\Shader.obj
+E:\GIT\Visualizer3D\src\WindowGLFW.cpp;E:\GIT\Visualizer3D\build\OpenGLCamera.dir\Release\WindowGLFW.obj

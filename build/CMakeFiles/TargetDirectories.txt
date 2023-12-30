@@ -1,0 +1,5 @@
+E:/GIT/Visualizer3D/build/CMakeFiles/OpenGLCamera.dir
+E:/GIT/Visualizer3D/build/CMakeFiles/ALL_BUILD.dir
+E:/GIT/Visualizer3D/build/CMakeFiles/ZERO_CHECK.dir
+E:/GIT/Visualizer3D/build/extern/imgui/CMakeFiles/imgui.dir
+E:/GIT/Visualizer3D/build/extern/imgui/CMakeFiles/glad.dir
