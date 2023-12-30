@@ -52,11 +52,11 @@ class WindowGLFW
 
         /// Shader attributes
 		DrawableLines *mAxis;
-        DrawableSpheres *mDrawableSpheres;
+        DrawableSpheres *mLightSphere;
 		glm::vec3 mLightPos;
 		glm::vec3 mLightColor;
 		float mEnvelopeTransparency;
-		float mGridTransparency;
+		//float mGridTransparency;
 		bool mEnvelopeWireframe;
 		bool mGridLines;
         

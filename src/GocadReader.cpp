@@ -12,7 +12,8 @@ GocadReader::GocadReader()
 {
     //ctor
 	std::cout << "aGridLines\n";
-	aGridLines = new DrawableLines("Grid");
+	aGridLines = new DrawableLines("Grid Lines");
+	//aGridTri = new DrawableTriangles("Grid");
 	std::cout << "aSkeletonLines\n";
 	aSkeletonLines = new DrawableLines("Skeleton");
 	std::cout << "aCellLines\n";
@@ -28,6 +29,32 @@ GocadReader::~GocadReader()
 {
     //dtor
 }
+
+void add_to_list(std::vector<glm::vec3> &vertices, const glm::vec3 &pt, std::vector<GLuint> &indices,
+	const glm::vec3 &n, std::vector<glm::vec3> &normals, bool smooth_normal = true)
+{
+	int i = 0;
+	for (const auto &v : vertices)
+	{
+		if ((std::abs(pt.x - v.x) < 1e-6) && (std::abs(pt.y - v.y) < 1e-6) && (std::abs(pt.z - v.z) < 1e-6))
+		{
+			if (smooth_normal)
+			{
+				normals.at(i) += n;
+				normals.at(i) = glm::normalize(normals.at(i));
+			}
+			break;
+		}
+		i++;
+	}
+	indices.push_back(i);
+	if (i >= vertices.size() || vertices.size() == 0)
+	{
+		vertices.push_back(pt);
+		normals.push_back(n);
+	}
+};
+
 
 void GocadReader::ReadDebugLogger(const std::string &filepath)
 {
@@ -162,6 +189,59 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 			}
         }
         
+		/*if (readGrid)
+		{
+			if (line.length() == 0)
+			{
+				continue;
+			}
+			if (line.find("# cell") != std::string::npos)
+			{
+				continue;
+			}
+			if (line.find("### Grid end") != std::string::npos)
+			{
+				readGrid = false;
+				aGridTri->SetBuffers(points, normals, grid_color, indices);
+				points.clear();
+				normals.clear();
+				indices.clear();
+				std::cout << "Grid read\n";
+				continue;
+			}
+
+			std::vector<std::string> tokenized;
+			m_Tokenize(line, " ", tokenized);
+			if (tokenized.size() < 12)
+			{
+				std::cout << "Error when reading grid cell points\n";
+				std::cout << line << "\n";
+				tokenized.clear();
+				points.clear();
+				break;
+			}
+			//std::cout<<tokenized.at(0)<<" "<<tokenized.at(1)<<" "<<tokenized.at(2)<<std::endl;
+			std::vector<glm::vec3> pts;
+			for (int i = 0; i < 9; i += 3)
+			{
+				glm::dvec3 pt{ std::stod(tokenized.at(i)), std::stod(tokenized.at(i + 1)), std::stod(tokenized.at(i + 2)) };
+
+				min_pt.x = std::min(min_pt.x, pt.x);
+				min_pt.y = std::min(min_pt.y, pt.y);
+				min_pt.z = std::min(min_pt.z, pt.z);
+
+				max_pt.x = std::max(max_pt.x, pt.x);
+				max_pt.y = std::max(max_pt.y, pt.y);
+				max_pt.z = std::max(max_pt.z, pt.z);
+
+				pts.push_back(pt);
+			}
+			glm::dvec3 n{ std::stod(tokenized.at(9)), std::stod(tokenized.at(10)), std::stod(tokenized.at(11)) };
+			for (int i = 0; i < pts.size(); i++)
+			{
+				add_to_list(points, pts.at(i), indices, n, normals, false);
+			}
+		}*/
      
         if(readSkeleton)
         {
@@ -305,11 +385,15 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 				}
 				else if (impactup || impactdown)
 				{
+					//pt = v_origin + pt;
+					aCellLines->PushLine(v_origin, pt, glm::vec3(0.8, 0.0, 0.0));
 					aCellSpheres->PushSphere(pt, glm::vec3(0.5, 0.5, 0.5), 0.5);
 					//std::cout << "impact up/down " << pt.x << " " << pt.y << " " << pt.z << "\n";
 				}
 				else if (impactleft || impactright)
 				{
+					//pt = v_origin + pt;
+					aCellLines->PushLine(v_origin, pt, glm::vec3(0.8, 0.0, 0.0));
 					aCellSpheres->PushSphere(pt, glm::vec3(0.5, 0.5, 0.5), 0.5);
 					//std::cout << "impact left/right " << pt.x << " " << pt.y << " " << pt.z << "\n";
 				}
@@ -327,7 +411,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 		                    std::cout<<"up x t: "<<up_tang<<" up x s "<<up_side<<" ********************************\n";
                         }
 		            }
-		            pt = v_origin+pt*5.0;
+					pt = v_origin + pt; // *5.0;
 		            aCellLines->PushLine(v_origin, pt, glm::vec3(0.8, 0.0, 0.0));
 		            //std::cout<<"pt "<<pt.x<<" "<<pt.y<<" "<<pt.z<<"\n";
 		        }
@@ -470,7 +554,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 		aCellSpheres->RotateSpherePosition(i, rotation, center);
 		aCellSpheres->TranslateSpherePosition(i, -center);
 	}
-	aCellSpheres->Update();
+	//aCellSpheres->Update();
 	/*for (int i = 0; i < aEnvelopeTri->GetTotalTriangles(); i++)
 	{
 		aEnvelopeTri->RotateTrianglePosition(i, rotation, center);
@@ -480,9 +564,13 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 	aEnvelopeTri->RotateTriangles(rotation, center);
 	aEnvelopeTri->TranslateTriangles(-center);
 	aEnvelopeTri->Update();
+	//aGridTri->RotateTriangles(rotation, center);
+	//aGridTri->TranslateTriangles(-center);
+	//aGridTri->Update();
 	std::cout << "done\n";
     
 }
+
 
 DrawableLines* GocadReader::GetSkeletonLines()
 {
@@ -502,10 +590,14 @@ DrawableSpheres* GocadReader::GetCellSpheres()
 {
     return aCellSpheres;
 }
-DrawableTriangles* GocadReader::GetEnvelopetriangles()
+DrawableTriangles* GocadReader::GetEnvelopeTriangles()
 {
 	return aEnvelopeTri;
 }
+/*DrawableTriangles* GocadReader::GetGridTriangles()
+{
+	return aGridTri;
+}*/
 
 void GocadReader::m_Tokenize(const std::string &text, const std::string &delimiters, std::vector<std::string> &tokenized)
 	{

@@ -18,7 +18,8 @@ class GocadReader
 		DrawableLines* GetGridLines();
 		DrawableLines* GetCellLines();
 		DrawableSpheres* GetCellSpheres();
-		DrawableTriangles* GetEnvelopetriangles();
+		DrawableTriangles* GetEnvelopeTriangles();
+		//DrawableTriangles* GetGridTriangles();
     protected:
 
     private:
@@ -27,6 +28,7 @@ class GocadReader
     	DrawableLines *aCellLines;
     	DrawableSpheres *aCellSpheres;
 		DrawableTriangles *aEnvelopeTri;
+		//DrawableTriangles *aGridTri;
         void m_Tokenize(const std::string &text, const std::string &delimiters, std::vector<std::string> &tokenized);
         
 };

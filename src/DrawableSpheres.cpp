@@ -37,6 +37,7 @@ DrawableSpheres::DrawableSpheres(const std::string &name, int slices, int stacks
 	mSphereShader->LoadShaders(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/sphere.vs").c_str(), 
 							   DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/sphere.fs").c_str() );
 	mName = name;
+	SetBuffers();
 }
 
 DrawableSpheres::~DrawableSpheres()
@@ -73,7 +74,7 @@ void DrawableSpheres::PopSphere()
 	Upload();
 }*/
 
-void DrawableSpheres::Update()
+void DrawableSpheres::SetBuffers()
 {
 	int samples = mStacks;
 	int definition = mSlices;
@@ -120,7 +121,11 @@ void DrawableSpheres::Update()
 	vertices.clear();
 	normals.clear();
 	indices.clear();
-    /*std::vector<GLfloat> radius;
+}
+
+/*void DrawableSpheres::Update()
+{
+    std::vector<GLfloat> radius;
     std::vector<glm::vec3> offset;
     std::vector<glm::vec3> colors;
 
@@ -136,8 +141,8 @@ void DrawableSpheres::Update()
 	//mSphereShader->SetColors(colors);
 	radius.clear();
 	colors.clear();
-	offset.clear();*/
-}
+	offset.clear();
+}*/
 
 int DrawableSpheres::GetTotalSpheres()
 {
@@ -148,13 +153,12 @@ std::string DrawableSpheres::GetName()
 {
 	return mName;
 }
-/*
+
 void DrawableSpheres::UpdateSpherePosition(int index, glm::vec3 position)
 {
-	if(index < 0 || index >= mSphereData.size()) return;
-	mSphereData.at(index)->mPosition = position;
-	Upload();
-}*/
+	if(index < 0 || index >= mPosition.size()) return;
+	mPosition.at(index) = position;
+}
 
 void DrawableSpheres::RotateSpherePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt)
 {

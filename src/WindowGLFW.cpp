@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#include <glm/gtc/type_ptr.hpp>
 #include "Mouse.h"
 #include "WindowGLFW.h"
 //#include "Shader.h"
@@ -9,28 +10,6 @@
 #include <sstream>
 #include <vector>
 
-
-GLenum glCheckError_3(const char *file, int line)
-{
-	GLenum errorCode;
-	while ((errorCode = glGetError()) != GL_NO_ERROR)
-	{
-		std::string error{ "None" };
-		switch (errorCode)
-		{
-		case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
-		case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
-		case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
-		case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
-		case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
-		case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
-		case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
-		}
-		std::cout << error << " | " << file << " (" << line << ")" << std::endl;
-	}
-	return errorCode;
-}
-#define glCheckError3() glCheckError_3(__FILE__, __LINE__) 
 
 static WindowGLFW *mStaticWindow = nullptr;
 
@@ -50,12 +29,12 @@ WindowGLFW::WindowGLFW(bool bidimensional, const std::string &title, int width, 
     mCamera3D = nullptr;
     /*mCamera2D = nullptr;
     mMouse = nullptr;*/
-    mDrawableSpheres = nullptr;
+	mLightSphere = nullptr;
 	mAxis = nullptr;
 	mEnvelopeTransparency = 1.0f;
-	mGridTransparency = 0.5f;
+	//mGridTransparency = 0.5f;
 	mEnvelopeWireframe = false;
-	mGridLines = true;
+	mGridLines = false;
 
 	mLightPos = glm::vec3{ 102.0f, 100.0f, 200.0f };
 	mLightColor = glm::vec3{ 1.0f, 1.0f, 1.0f };
@@ -65,7 +44,7 @@ WindowGLFW::WindowGLFW(bool bidimensional, const std::string &title, int width, 
     if(!mBidimensional)
     {
         mCamera3D = new Camera3D(mScreenWidth, mScreenHeight);
-        mCamera3D->SetPosition(10,15,20);
+        //mCamera3D->SetPosition(10,15,20);
         mCamera3D->LookAt(0, 0, 0);
     }
     else
@@ -172,6 +151,7 @@ void WindowGLFW::InitializeWindow()
         cout<<"GLEW initialized.\n";
     }*/
 
+    glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
@@ -182,7 +162,6 @@ void WindowGLFW::InitializeWindow()
     glfwSetCursorPosCallback(mWindow, MouseCallback);
     glfwSetWindowSizeCallback(mWindow, ResizeCallback);
     glfwSetKeyCallback(mWindow, KeyboardCallback);
-	glCheckError3();
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -241,11 +220,8 @@ void WindowGLFW::InitializeAxisShaders()
 
 void WindowGLFW::InitializeSpheresShaders()
 {
-	mDrawableSpheres = new DrawableSpheres("Generic Spheres");
-	mDrawableSpheres->PushSphere(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.5, 0.0), 2.0);
-	mDrawableSpheres->PushSphere(glm::vec3(10.0, 10.0, 0.0), glm::vec3(0.0, 0.0, 0.5), 4.0);
-	mDrawableSpheres->Update();
-	glCheckError3();
+	mLightSphere = new DrawableSpheres("Light Spheres");
+	mLightSphere->PushSphere(mLightPos, mLightColor, 2.0);
 }
 
 
@@ -261,10 +237,11 @@ void WindowGLFW::Run()
     //InitializeWindow();
     ResetTime();
     InitializeAxisShaders();
-    //InitializeSpheresShaders();
+    InitializeSpheresShaders();
 
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-	bool show_demo_window = true;
+	//bool show_demo_window = false;
+	bool ortho_proj = false;
 	mMoveCamera = false;
     while (!glfwWindowShouldClose(mWindow))
     {
@@ -275,8 +252,8 @@ void WindowGLFW::Run()
 		ImGui::NewFrame();
 
 
-		if (show_demo_window)
-			ImGui::ShowDemoWindow(&show_demo_window);
+		//if (show_demo_window)
+		//	ImGui::ShowDemoWindow(&show_demo_window);
 
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 		{
@@ -285,13 +262,14 @@ void WindowGLFW::Run()
 			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
 			ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+			//ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 
-			ImGui::SliderFloat("Grid Transparency", &mGridTransparency, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			//ImGui::SliderFloat("Grid Transparency", &mGridTransparency, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 			ImGui::SliderFloat("Envelope Transparency", &mEnvelopeTransparency, 0.0f, 1.0f);            
 			ImGui::Checkbox("Envelope Lines", &mEnvelopeWireframe);      
 			ImGui::Checkbox("Grid lines", &mGridLines);      
-			ImGui::SliderFloat3("Light Pos", &mLightPos.x, -3000.0f, 3000.0f);            
+			ImGui::Checkbox("Orthographic Projection", &ortho_proj);
+			ImGui::SliderFloat3("Light Pos", &mLightPos.x, -200.0f, 200.0f);            
 			ImGui::ColorEdit3("Light Color", (float*)&mLightColor); // Edit 3 floats representing a color
 			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
@@ -306,7 +284,7 @@ void WindowGLFW::Run()
 			ImGui::End();
 		}
 
-
+		mCamera3D->SetOrthographic(ortho_proj);
 
 		ImGui::Render();
 		glfwMakeContextCurrent(mWindow);
@@ -330,7 +308,8 @@ void WindowGLFW::Run()
 
 void WindowGLFW::Draw()
 {
-    glm::vec3 mCameraScale(0.1f, 0.1f, 0.1f);
+    //glm::vec3 mCameraScale(0.1f, 0.1f, 0.1f);
+    glm::vec3 mCameraScale(1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW);
@@ -338,7 +317,8 @@ void WindowGLFW::Draw()
     glPushMatrix();
     if(!mBidimensional)
     {
-        glLoadMatrixf(&mCamera3D->ViewProjectionMatrix()[0][0]);
+        //glLoadMatrixf(&mCamera3D->ViewProjectionMatrix()[0][0]);
+        glLoadMatrixf(glm::value_ptr(mCamera3D->ViewProjectionMatrix()));
         glScalef(mCameraScale[0], mCameraScale[1], mCameraScale[2]);
     }
     else
@@ -371,7 +351,7 @@ void WindowGLFW::Draw()
 	mAxisShader->DisableVertexAttribArrayColor();*/
 
 	mAxis->Draw();
-	//mDrawableSpheres->Draw(mLightPos, mLightColor);
+	mLightSphere->Draw(mLightPos, mLightColor);
 	
 
 	for(const auto dl : mOtherLines)
@@ -381,6 +361,7 @@ void WindowGLFW::Draw()
 		else
 			if(mGridLines)
 				dl->Draw();
+		//dl->Draw();
 	}
 	for(const auto ds : mOtherSpheres)
 	{
@@ -388,7 +369,10 @@ void WindowGLFW::Draw()
 	}
 	for(const auto dt : mOtherTriangles)
 	{
-	    dt->Draw(mLightPos, mLightColor, mEnvelopeTransparency, mEnvelopeWireframe);
+		if(dt->GetName().find("Envelope") != std::string::npos)
+		    dt->Draw(mLightPos, mLightColor, mEnvelopeTransparency, mEnvelopeWireframe);
+		//else if(dt->GetName().find("Grid") != std::string::npos)
+		//    dt->Draw(mLightPos, mLightColor, mGridTransparency, mGridLines);
 	}
 
 
@@ -453,7 +437,7 @@ void WindowGLFW::Update()
 	{
 		mCamera2D->Update();
 	}*/
-    
+	mLightSphere->UpdateSpherePosition(0, mLightPos);
 }
 
 /// CALLBACK
@@ -530,6 +514,7 @@ void WindowGLFW::AppendDrawableSphere(DrawableSpheres *ds)
     }
 
 }
+
 void WindowGLFW::AppendDrawableTriangle(DrawableTriangles *dt)
 {
     if(dt)
@@ -555,14 +540,14 @@ void WindowGLFW::Shutdown()
 	ImGui::DestroyContext();
 
 	// Cleanup VBO and shader
-	delete mDrawableSpheres;
+	delete mLightSphere;
 	delete mAxis;
 	for(auto dl : mOtherLines)
 	    delete dl;
 	mOtherLines.clear();
-	/*for(auto ds : mOtherSpheres)
+	for(auto ds : mOtherSpheres)
 	    delete ds;
-	mOtherSpheres.clear();*/
+	mOtherSpheres.clear();
 	for(auto dt : mOtherTriangles)
 	    delete dt;
 	mOtherTriangles.clear();

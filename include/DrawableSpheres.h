@@ -20,16 +20,16 @@ class DrawableSpheres
         void PushSphere(glm::vec3 position, glm::vec3 color, float radius);
         void RotateSpherePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt);
         void TranslateSpherePosition(int index, glm::vec3 position);
+        void UpdateSpherePosition(int index, glm::vec3 position);
 
         int GetTotalSpheres();
         std::string GetName();
         /*void PopSphere();
 
 
-        void UpdateSpherePosition(int index, glm::vec3 position);
         void UpdateSphereColor(int index, glm::vec3 color);
-        void DeleteSphereAt(int index);*/
-       	void Update();
+        void DeleteSphereAt(int index);
+       	void Update();*/
 
     private:
     
@@ -54,6 +54,7 @@ class DrawableSpheres
         int mStacks;
 		unsigned int mNumberOfVerticesPerSphere;
 
+		void SetBuffers();
 		//void mCreateSphere(float radius, std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &colors, std::vector<GLuint> &indices);
         
 };

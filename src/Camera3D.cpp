@@ -1,4 +1,6 @@
 #include "Camera3D.h"
+#include <glm/gtc/quaternion.hpp> 
+#include <glm/gtx/quaternion.hpp>
 #include "GLFW/glfw3.h"
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
@@ -30,6 +32,8 @@ void Camera3D::Reset()
     mRight = glm::vec3(1.0f, 0.0f, 0.0f);
     mUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
+	mScale = 2.0f; // ortho
+
     mCameraHasChanged = true;
 }
 
@@ -45,7 +49,7 @@ void Camera3D::LookAt(float x, float y, float z)
     mCameraHasChanged = true;
 }
 
-void Camera3D::Pan(glm::vec2 pan)
+void Camera3D::Pan(const glm::vec2 &pan)
 {
     glm::vec3 distance = (mPosition - mFocus);
     glm::vec3 translation = (pan.x * mRight) + (-pan.y * mUp);
@@ -55,9 +59,9 @@ void Camera3D::Pan(glm::vec2 pan)
     mCameraHasChanged = true;
 }
 
-void Camera3D::Orbit(glm::vec2 delta)
+void Camera3D::Orbit(const glm::vec2 &delta, const glm::vec2 &mousepos)
 {
-    glm::vec3 distance = mPosition - mFocus;
+    /*glm::vec3 distance = mPosition - mFocus;
 
     float theta = atan2( distance.x, distance.z );
     float phi = atan2( sqrt( distance.x * distance.x + distance.z * distance.z ), distance.y );
@@ -80,16 +84,52 @@ void Camera3D::Orbit(glm::vec2 delta)
 
     mDirection = normalize(-distance);
     mRight = normalize(cross(mDirection, glm::vec3(0, 1, 0)));
-    mUp = cross(mRight, mDirection);
+    mUp = cross(mRight, mDirection);*/
+
+	glm::quat pitch_quat = glm::angleAxis(delta.y*mOrbitSensibility/3.0f, glm::vec3(1, 0, 0));
+	glm::quat heading_quat = glm::angleAxis(delta.x*mOrbitSensibility/3.0f, glm::vec3(0, 1, 0));
+	glm::quat qRoll;
+	if(mousepos.x > mScreenWidth/2.0)
+		qRoll = glm::angleAxis(-delta.y*mOrbitSensibility / 3.0f, glm::vec3(0, 0, 1));
+	else
+		qRoll = glm::angleAxis(delta.y*mOrbitSensibility / 3.0f, glm::vec3(0, 0, 1));
+	//add the two quaternions
+	glm::quat temp = glm::cross(pitch_quat, heading_quat);
+	temp = glm::cross(qRoll, temp);
+	temp = glm::normalize(temp);
+	//update the direction from the quaternion
+	mDirection = glm::rotate(temp, mDirection);
+	mRight = glm::rotate(temp, mRight);
+	mUp = glm::rotate(temp, mUp);
+	mPosition = -glm::normalize(mDirection) * glm::length(mPosition - mFocus) + mFocus;
 
     mCameraHasChanged = true;
 }
 
+void Camera3D::SetOrthographic(bool use_ortho)
+{
+	if(use_ortho != mUseOrtho)
+		mCameraHasChanged = true;
+	mUseOrtho = use_ortho;
+
+	if (mUseOrtho)
+		mPanSensibility = 5.0f;
+	else
+		mPanSensibility = 0.1f;
+}
+
 void Camera3D::Zoom(float times)
 {
-    glm::vec3 distance = mPosition - mFocus;
-    distance *= (1.0f + times * mZoomSensibility);
-    mPosition = mFocus + distance;
+	if (!mUseOrtho)
+	{
+		glm::vec3 distance = mPosition - mFocus;
+		distance *= (1.0f + times * mZoomSensibility);
+		mPosition = mFocus + distance;
+	}
+	else
+	{
+		mScale -= (times * mZoomSensibility);
+	}
 
     mCameraHasChanged = true;
 }
@@ -131,7 +171,7 @@ void Camera3D::MouseUpdate(bool update)
     }
     else if(ImGui::IsKeyDown(mouseLeft))
     {
-        Orbit(glm::vec2(-deltaX / mScreenWidth, -deltaY / mScreenWidth));
+        Orbit(glm::vec2(-deltaX / mScreenWidth, -deltaY / mScreenWidth), glm::vec2(io.MousePos.x, io.MousePos.y));
     }
     else if(ImGui::IsKeyDown(mouseMiddle))
     {
@@ -152,13 +192,27 @@ void Camera3D::Update()
 
 void Camera3D::UpdateViewMatrix()
 {
-    mViewMatrix = glm::lookAt(mPosition, mFocus, mUp);
+	if (mUseOrtho)
+	{
+		/*glm::mat4 m(1.0f);
+		glm::mat4 t = glm::translate(glm::mat4(1.0f), -mPosition);*/
+		glm::mat4 s = glm::scale(glm::mat4(1.0f), glm::vec3(mScale));
+
+		mViewMatrix = glm::lookAt(mPosition, mFocus, mUp);
+		mViewMatrix = s * mViewMatrix;
+	}
+	else
+	    mViewMatrix = glm::lookAt(mPosition, mFocus, mUp);
 }
 
 void Camera3D::UpdateProjectionMatrix()
 {
     /// perspectiveFov-> glm/gtc/matrix_transform.hpp
-    mProjectionMatrix = glm::perspectiveFov(mFieldOfView, mScreenWidth, mScreenHeight, mNearPlaneDistance, mFarPlaneDistance);
+	if(mUseOrtho)
+		mProjectionMatrix = glm::ortho(0.0f, mScreenWidth, 0.0f, mScreenHeight, -5000.0f, 5000.f);
+	else
+		if(mScreenWidth > 0 && mScreenHeight > 0) // Assertion failed: width > static_cast<T>(0), file d:\programmingprojects\glm-0.9.9.8\glm\ext\matrix_clip_space.inl, line 374
+			mProjectionMatrix = glm::perspectiveFov(mFieldOfView, mScreenWidth, mScreenHeight, mNearPlaneDistance, mFarPlaneDistance);
 }
 
 void Camera3D::UpdateViewProjectionMatrix()

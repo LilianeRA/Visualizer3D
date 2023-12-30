@@ -1078,12 +1078,11 @@ int main(void)
 	return 0;
 }*/
 
-
-
 #include <iostream>
-#include "WindowGLFW.h"
 #include "DirUtils.h"
+#include "WindowGLFW.h"
 #include "GocadReader.h"
+
 
 int main(int argc, char** args)
 {
@@ -1099,7 +1098,8 @@ int main(int argc, char** args)
 	glfw->AppendDrawableLine(gr->GetSkeletonLines());
 	glfw->AppendDrawableLine(gr->GetCellLines());
 	glfw->AppendDrawableSphere(gr->GetCellSpheres());
-	glfw->AppendDrawableTriangle(gr->GetEnvelopetriangles());
+	//glfw->AppendDrawableTriangle(gr->GetGridTriangles());
+	glfw->AppendDrawableTriangle(gr->GetEnvelopeTriangles());
 	glfw->Run();
 
 	return 0;

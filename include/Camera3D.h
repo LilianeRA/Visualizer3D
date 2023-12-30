@@ -18,6 +18,7 @@ class Camera3D
                  float nearPlaneDistance = 0.001f, float farPlaneDistance = 1000.0f);
         virtual ~Camera3D();
 
+		void SetOrthographic(bool use_ortho);
         void Reset();
         void Update();
         void UpdateScreenSize(float width, float height);
@@ -26,8 +27,8 @@ class Camera3D
         void MouseUpdate(bool update);
 
         glm::mat4 ViewProjectionMatrix() const;
-		void Pan(glm::vec2 pan);
-		void Orbit(glm::vec2 delta);
+		void Pan(const glm::vec2 &pan);
+		void Orbit(const glm::vec2 &delta, const glm::vec2 &mousepos);
 
     protected:
 
@@ -42,6 +43,8 @@ class Camera3D
         float mPanSensibility;
         float mOrbitSensibility;
 
+		float mScale;
+
 		glm::vec3 mPosition;
 		glm::vec3 mDirection;
 		glm::vec3 mRight;
@@ -53,6 +56,7 @@ class Camera3D
 		glm::mat4 mViewProjectionMatrix;
 
 		bool mCameraHasChanged;
+		bool mUseOrtho;
 
         /// Movement
         void Zoom(float times);
