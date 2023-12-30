@@ -1,0 +1,428 @@
+#include "Shader.h"
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <glm/gtc/type_ptr.hpp>
+
+Shader::Shader(mObjectToDraw mode)
+{
+	//ctor
+	mMode = mode;
+	mNumberOfVertices = 0;
+}
+
+Shader::~Shader()
+{
+	//dtor
+	CleanUp();
+}
+
+
+bool Shader::LoadShaders(const char * vertex_file_path, const char * fragment_file_path)
+{
+	std::cout << "Loading shaders...\n";
+
+	// Create the shaders
+	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+
+	auto read_shader_lines = [](const std::string &shader_path, bool &file_ok)  -> std::string 
+	{
+		std::string shaderCode;
+		std::ifstream shaderStream(shader_path, std::ios::in);
+		if (shaderStream.is_open()) {
+			file_ok = true;
+			std::string Line = "";
+			while (getline(shaderStream, Line))
+				shaderCode += "\n" + Line;
+			shaderStream.close();
+		}
+		else {
+			file_ok = false;
+			std::cout << "Impossible to open " << shader_path << ". Are you in the right directory?\n";
+			getchar();
+			return "";
+		}
+		return shaderCode;
+	};
+
+	// Read the Vertex Shader code from the file
+	bool file_ok = false;
+	std::string VertexShaderCode = read_shader_lines(vertex_file_path, file_ok);
+	if (!file_ok)
+	{
+		std::cout << "Vertex shader error\n";
+		return false;
+	}
+
+	// Read the Fragment Shader code from the file
+	std::string FragmentShaderCode = read_shader_lines(fragment_file_path, file_ok);
+	if (!file_ok)
+	{
+		std::cout << "Fragment shader error\n";
+		return false;
+	}
+
+
+	auto compile_shader = [](const char *sourcePointer, GLuint shaderID) -> void
+	{
+		GLint Result = GL_FALSE;
+		int InfoLogLength;
+
+		glShaderSource(shaderID, 1, &sourcePointer, NULL);
+		glCompileShader(shaderID);
+
+		// Check Vertex Shader
+		glGetShaderiv(shaderID, GL_COMPILE_STATUS, &Result);
+		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+		if (InfoLogLength > 0) {
+			std::vector<char> shaderErrorMessage(InfoLogLength + 1);
+			glGetShaderInfoLog(shaderID, InfoLogLength, NULL, &shaderErrorMessage[0]);
+			std::cout << &shaderErrorMessage[0] <<std::endl;
+			std::cout << Result <<std::endl;
+		}
+	};
+	// Compile Vertex Shader
+	std::cout << "Compiling shader : " << vertex_file_path << "\n";
+	compile_shader(VertexShaderCode.c_str(), VertexShaderID);
+
+	// Compile Fragment Shader
+	std::cout << "Compiling shader : "<< fragment_file_path<<"\n";
+	compile_shader(FragmentShaderCode.c_str(), FragmentShaderID);
+
+	// Link the program
+	std::cout << "Linking program\n";
+	mProgramID = glCreateProgram();
+	glAttachShader(mProgramID, VertexShaderID);
+	glAttachShader(mProgramID, FragmentShaderID);
+	glLinkProgram(mProgramID);
+
+	// Check the program
+	GLint Result = GL_FALSE;
+	int InfoLogLength;
+	glGetProgramiv(mProgramID, GL_LINK_STATUS, &Result);
+	glGetProgramiv(mProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+	if (InfoLogLength > 0) {
+		std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+		glGetProgramInfoLog(mProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+		std::cout << "Program error: "<< ProgramErrorMessage[0] << std::endl;
+	}
+
+
+	glDetachShader(mProgramID, VertexShaderID);
+	glDetachShader(mProgramID, FragmentShaderID);
+
+	glDeleteShader(VertexShaderID);
+	glDeleteShader(FragmentShaderID);
+
+	std::cout << "mProgramID " << mProgramID << std::endl;
+	//return ProgramID;
+	return true;
+}
+
+void Shader::SetBuffers(const std::vector<glm::vec3> &vertices, const std::vector<GLuint> &indices, const std::vector<glm::vec3> &colors)
+{
+	glUseProgram(mProgramID);
+
+	glCreateVertexArrays(1, &mVertexArray);
+	glBindVertexArray(mVertexArray);
+
+	glGenBuffers(1, &mVertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), vertices.data(), GL_STATIC_DRAW);
+
+	glGenBuffers(1, &mColorBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*colors.size(), colors.data(), GL_STATIC_DRAW);
+
+	glGenBuffers(1, &mIndexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices.size(), indices.data(), GL_STATIC_DRAW);
+
+	glCreateBuffers(1, &mPerFrameDataBuffer);
+	glNamedBufferStorage(mPerFrameDataBuffer, sizeof(glm::mat4), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	glBindBuffer(GL_UNIFORM_BUFFER, mPerFrameDataBuffer);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, mPerFrameDataBuffer);
+
+
+	mMatrixID = glGetUniformLocation(mProgramID, "MVP");
+	mVertexPositionID = 0; // glGetAttribLocation(mProgramID, "vPos");
+	mVertexColorID = 1;// glGetAttribLocation(mProgramID, "vColor");
+
+	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	mNumberOfIndices = indices.size();
+	mNumberOfVertices = vertices.size();
+	/*std::cout << "mVertexPositionID " << mVertexPositionID << std::endl;
+	std::cout << "mVertexColorID    " << mVertexColorID << std::endl;
+	std::cout << "mNumberOfVertices " << mNumberOfVertices << std::endl;
+	std::cout << "mNumberOfIndices  " << mNumberOfIndices << std::endl;*/
+
+	/*//UseShader();
+	// set up vertex data (and buffer(s)) and configure vertex attributes
+	// ------------------------------------------------------------------
+	glGenVertexArrays(1, &mVertexArray); // VAO
+	glGenBuffers(1, &mVertexBuffer);     // VBO
+	//glGenBuffers(1, &mIndexBuffer);		 // EBO
+	glGenBuffers(1, &mColorBuffer);
+	// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+	glBindVertexArray(mVertexArray);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), vertices.data(), GL_STATIC_DRAW);
+
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort)*indices.size(), indices.data(), GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
+	glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), colors.data(), GL_STATIC_DRAW);
+
+	mVertexPosition_modelspaceID = glGetAttribLocation(mProgramID, "vertexPosition_modelspace");
+	std::cout << "mVertexPosition_modelspaceID " << mVertexPosition_modelspaceID << std::endl;
+	glVertexAttribPointer(
+		mVertexPosition_modelspaceID,
+		3,
+		GL_FLOAT,
+		GL_FALSE,
+		(0),
+		(void*)0
+	);
+	glEnableVertexAttribArray(mVertexPosition_modelspaceID);
+	mVertexColorID = glGetAttribLocation(mProgramID, "vertexColor");
+	std::cout << "mVertexColorID " << mVertexColorID << std::endl;
+	glVertexAttribPointer(
+		mVertexColorID,
+		3,
+		GL_FLOAT,
+		GL_FALSE,
+		(0),
+		(void*)0
+	);
+	glEnableVertexAttribArray(mVertexColorID);
+	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	//mNumberOfIndices = indices.size();
+	mNumberOfVertices = vertices.size();
+	std::cout<<"mNumberOfVertices "<<mNumberOfVertices<<std::endl;
+	std::cout << "mNumberOfIndices " << mNumberOfIndices << std::endl;
+	std::cout << "colors " << colors.size() << std::endl;
+
+	mColors.clear();
+	mColors = colors;*/
+}
+
+/*void Shader::SetColors(std::vector<glm::vec3> &colors)
+{
+	UseShader();
+	glGenBuffers(1, &mColorBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
+	glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), &colors[0], GL_STATIC_DRAW);
+
+	mVertexColorID = glGetAttribLocation(mProgramID, "vertexColor");
+
+	glVertexAttribPointer(
+		mVertexColorID,
+		3,
+		GL_FLOAT,
+		GL_FALSE,
+		(0),
+		(void*)0
+	);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	mColors.clear();
+	mColors = colors;
+	colors.clear();
+}*/
+
+
+/*void Shader::SetRadius(std::vector<GLfloat> &radius)
+{
+	mRadius.clear();
+	mRadius = radius;
+	radius.clear();
+}*/
+
+/*void Shader::SetOffset(std::vector<glm::vec3> &offset)
+{
+	mOffset.clear();
+	mOffset = offset;
+	offset.clear();
+}*/
+
+/*void Shader::UseShader()
+{
+	glUseProgram(mProgramID);
+}*/
+
+void Shader::SetModelviewMatrix()
+{
+	GLfloat modelview[16];
+	//glm::mat4 modelview;
+	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+	glUniformMatrix4fv(mMatrixID, 1, GL_FALSE, modelview);
+	
+	glNamedBufferSubData(mPerFrameDataBuffer, 0, sizeof(glm::mat4),modelview);
+}
+
+void APIENTRY glDebugOutput(GLenum source,
+	GLenum type,
+	unsigned int id,
+	GLenum severity,
+	GLsizei length,
+	const char *message,
+	const void *userParam)
+{
+	// ignore non-significant error/warning codes
+	if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+
+	std::cout << "---------------" << std::endl;
+	std::cout << "Debug message (" << id << "): " << message << std::endl;
+
+	switch (source)
+	{
+	case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
+	case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
+	case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
+	case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
+	} std::cout << std::endl;
+
+	switch (type)
+	{
+	case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break;
+	case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
+	case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
+	case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
+	case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
+	case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
+	case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
+	} std::cout << std::endl;
+
+	switch (severity)
+	{
+	case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
+	case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
+	case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
+	case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
+	} std::cout << std::endl;
+	std::cout << std::endl;
+}
+
+void Shader::DrawShader()
+{
+	glUseProgram(mProgramID);
+	glBindVertexArray(mVertexArray); // to prevent the error: Invalid VAO/VBO/pointer usage
+
+	SetModelviewMatrix();
+
+	glEnableVertexAttribArray(mVertexPositionID); 
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+	glVertexAttribPointer(mVertexPositionID, 3, GL_FLOAT, GL_FALSE, (0), (void*)0);
+
+	glEnableVertexAttribArray(mVertexColorID); 
+	glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer); 
+	glVertexAttribPointer(mVertexColorID, 3, GL_FLOAT, GL_FALSE, (0), (void*)0);
+
+	if (mMode == mObjectToDraw::mLine)
+	{
+		glDrawElements(GL_LINES, mNumberOfIndices, GL_UNSIGNED_INT, 0);
+		//glDrawArrays(GL_LINES, 0, mNumberOfVertices);
+	}
+	glUseProgram(0);
+
+
+	/*glBindVertexArray(mVertexArray);
+	glEnableVertexAttribArray(mVertexPosition_modelspaceID);
+	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+
+	if (mMode == mObjectToDraw::mLine)
+		glDrawArrays(GL_LINES, 0, mNumberOfVertices);
+	if (mMode == mObjectToDraw::mSphere)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
+		//glDrawArrays(GL_LINE_STRIP, 0, mNumberOfVertices); // 12*3 indices starting at 0 -> 12 triangles
+		GLuint mRadiusUniform = glGetUniformLocation(mProgramID, "radius");
+		GLuint mOffsetUniform = glGetUniformLocation(mProgramID, "offset");
+		GLuint mColorUniform = glGetUniformLocation(mProgramID, "vertexColor");
+		for (unsigned int i = 0; i < mRadius.size(); i++)
+		{
+			glUniform3f(mOffsetUniform, mOffset.at(i)[0], mOffset.at(i)[1], mOffset.at(i)[2]);
+			glUniform3f(mColorUniform, mColors.at(i)[0], mColors.at(i)[1], mColors.at(i)[2]);
+			glUniform1f(mRadiusUniform, mRadius.at(i));
+			glDrawElements(GL_TRIANGLES, mNumberOfIndices, GL_UNSIGNED_SHORT, 0);
+		}
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+	if (mMode == mObjectToDraw::mTriangle)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
+		for (unsigned int i = 0; i < 1; i++)
+		{
+			glDrawElements(GL_TRIANGLES, mNumberOfIndices, GL_UNSIGNED_SHORT, 0);
+		}
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+
+	UseShader();
+	SetModelviewMatrix();
+	EnableVertexAttribArrayVertex();
+	glDrawArrays(GL_LINES, 0, mNumberOfVertices);
+	DisableVertexAttribArrayVertex();*/
+	
+}
+
+/*void Shader::DisableVertexAttribArrayVertex()
+{
+	glDisableVertexAttribArray(mVertexPosition_modelspaceID);
+}
+
+void Shader::DisableVertexAttribArrayColor()
+{
+	glDisableVertexAttribArray(mVertexColorID);
+}
+
+void Shader::EnableVertexAttribArrayVertex()
+{
+	// 1rst attribute buffer : vertices
+	glEnableVertexAttribArray(mVertexPosition_modelspaceID);
+	glBindVertexArray(mVertexArray);
+}
+
+void Shader::EnableVertexAttribArrayColor()
+{
+	// 2nd attribute buffer : colors
+	glEnableVertexAttribArray(mVertexColorID);
+}*/
+void Shader::CleanUp()
+{
+	glDeleteBuffers(1, &mIndexBuffer);
+	glDeleteBuffers(1, &mVertexBuffer);
+	glDeleteBuffers(1, &mColorBuffer);
+	glDeleteBuffers(1, &mPerFrameDataBuffer);
+	glDeleteProgram(mProgramID);
+}
+
+
+
+
