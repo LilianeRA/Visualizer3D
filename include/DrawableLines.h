@@ -20,13 +20,14 @@ class DrawableLines
 		void Update();
         void Draw();
 
-        /*void PopLine();
-
         int GetTotalLines();
 
         void UpdateLinePosition(int index, glm::vec3 pos1, glm::vec3 pos2);
         void RotateLinePosition(int index, const glm::dmat3 &rotation, const glm::dvec3 &rot_pt);
-        void TranslateLinePosition(int index, const glm::vec3 &pos1, const glm::vec3 &pos2);
+        void TranslateLinePosition(int index, const glm::vec3 &translation);
+        /*void PopLine();
+
+
         void UpdateLineColor(int index, glm::vec3 color);
         void DeleteLineAt(int index);
 */

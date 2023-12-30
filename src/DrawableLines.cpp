@@ -20,15 +20,7 @@ DrawableLines::~DrawableLines()
 
 void DrawableLines::Draw()
 {
-    //mLineShader->UseShader();
-    //mLineShader->SetModelviewMatrix();
-	//mLineShader->EnableVertexAttribArrayVertex();
-	//mLineShader->EnableVertexAttribArrayColor();
 	mLineShader->DrawShader();
-	//mLineShader->DisableVertexAttribArrayVertex();
-	//mLineShader->DisableVertexAttribArrayColor();
-	//glBindVertexArray(0);
-	//glUseProgram(0);
 }
 
 
@@ -73,7 +65,7 @@ void DrawableLines::Update()
 	colors.clear();
 }
 
-/*int DrawableLines::GetTotalLines()
+int DrawableLines::GetTotalLines()
 {
 	return mLineData.size();
 }
@@ -83,7 +75,6 @@ void DrawableLines::UpdateLinePosition(int index, glm::vec3 pos1, glm::vec3 pos2
 	if(index < 0 || index >= mLineData.size()) return;
 	mLineData.at(index)->mPosition1 = pos1;
 	mLineData.at(index)->mPosition2 = pos2;
-	//Upload();
 }
 
 
@@ -97,18 +88,15 @@ void DrawableLines::RotateLinePosition(int index, const glm::dmat3 &rotation, co
 	
 	mLineData.at(index)->mPosition1 = p1;
 	mLineData.at(index)->mPosition2 = p2;
-	
-	//Upload();
 }
 
-void DrawableLines::TranslateLinePosition(int index, const glm::vec3 &pos1, const glm::vec3 &pos2)
+void DrawableLines::TranslateLinePosition(int index, const glm::vec3 &translation)
 {
 	if(index < 0 || index >= mLineData.size()) return;
-	mLineData.at(index)->mPosition1 += pos1;
-	mLineData.at(index)->mPosition2 += pos2;
-	//Upload();
+	mLineData.at(index)->mPosition1 += translation;
+	mLineData.at(index)->mPosition2 += translation;
 }
-
+/*
 void DrawableLines::UpdateLineColor(int index, glm::vec3 color)
 {
 	if(index < 0 || index >= mLineData.size()) return;

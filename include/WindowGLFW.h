@@ -3,7 +3,7 @@
 
 #include "DrawableSpheres.h"
 #include "DrawableLines.h"
-//#include "DrawableTriangles.h"
+#include "DrawableTriangles.h"
 #include "Camera3D.h"
 //#include "Camera2D.h"
 #include <string>
@@ -19,9 +19,9 @@ class WindowGLFW
         virtual ~WindowGLFW();
 
         void InitializeWindow();
-        /*void AppendDrawableLine(DrawableLines *dl);
-		void AppendDrawableSphere(DrawableSpheres *ds);
-		void AppendDrawableTriangle(DrawableTriangles *dt);*/
+        void AppendDrawableLine(DrawableLines *dl);
+		/*void AppendDrawableSphere(DrawableSpheres *ds);*/
+		void AppendDrawableTriangle(DrawableTriangles *dt);
         void Run();
 
     protected:
@@ -57,10 +57,10 @@ class WindowGLFW
 		glm::vec3 mLightColor;
         
 
-		/*
         std::vector<DrawableLines*> mOtherLines;
-		std::vector<DrawableSpheres*> mOtherSpheres;
-		std::vector<DrawableTriangles*> mOtherTriangles;*/
+		/*
+		std::vector<DrawableSpheres*> mOtherSpheres;*/
+		std::vector<DrawableTriangles*> mOtherTriangles;
 
         void Draw();
         void Update();

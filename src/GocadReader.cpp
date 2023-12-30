@@ -11,16 +11,17 @@
 GocadReader::GocadReader()
 {
     //ctor
-	/*std::cout << "aGridLines\n";
+	std::cout << "aGridLines\n";
 	aGridLines = new DrawableLines();
 	std::cout << "aSkeletonLines\n";
 	aSkeletonLines = new DrawableLines();
+	/*
 	std::cout << "aCellLines\n";
 	aCellLines = new DrawableLines();
 	std::cout << "aCellSpheres\n";
-	aCellSpheres = new DrawableSpheres();
+	aCellSpheres = new DrawableSpheres();*/
 	std::cout << "aEnvelopeTri\n";
-	aEnvelopeTri = new DrawableTriangles();*/
+	aEnvelopeTri = new DrawableTriangles();
 	
 }
 
@@ -31,10 +32,17 @@ GocadReader::~GocadReader()
 
 void GocadReader::ReadDebugLogger(const std::string &filepath)
 {
+	if (!DirUtils::m_IsFile(filepath))
+	{
+		std::cout << "Debug file not found!\n";
+		return;
+	}
     std::ifstream file(filepath);
     std::cout<<file.is_open()<<std::endl;
     std::string line; 
-    std::vector<glm::dvec3> points;
+    std::vector<glm::vec3> points;
+    std::vector<glm::vec3> normals;
+    std::vector<GLuint> indices;
     glm::dvec3 min_pt{ INT_MAX};
     glm::dvec3 max_pt{-INT_MAX};
     
@@ -50,6 +58,9 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
     bool readEnvelope = false;
     bool readSkeleton = false;
     bool readCells = false;
+
+	bool read_tri_vertices = false;
+	bool read_tri_indices = false;
 	while (std::getline(file, line))
     {
 		//std::cout<<"+++ "<<line<<"\n";
@@ -86,7 +97,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
             readGrid = false;
             readEnvelope = false;
             readSkeleton = false;
-            readCells = true;
+            //readCells = true;
             continue;
         }
         
@@ -105,7 +116,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
                 {
                     for(size_t i = 0; i < points.size()-1; i++)
                     {
-                        //aGridLines->PushLine(points.at(i), points.at(i+1), grid_color);
+                        aGridLines->PushLine(points.at(i), points.at(i+1), grid_color);
                     }
                     points.clear();
                 }
@@ -118,7 +129,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
                 //std::cout<<"points.size() "<<points.size()<<std::endl;
                 for(size_t i = 0; i < points.size()-1; i++)
                 {
-                    //aGridLines->PushLine(points.at(i), points.at(i+1), grid_color);
+                    aGridLines->PushLine(points.at(i), points.at(i+1), grid_color);
                 }
                 points.clear();
 				std::cout << "Grid read\n";
@@ -127,7 +138,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
             
 			std::vector<std::string> tokenized;
 			m_Tokenize(line, " ", tokenized);
-			if(tokenized.size() != 9) 
+			if(tokenized.size() < 12) 
 			{
 			    std::cout << "Error when reading grid cell points\n";
 				std::cout << line << "\n";
@@ -138,15 +149,16 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 			//std::cout<<tokenized.at(0)<<" "<<tokenized.at(1)<<" "<<tokenized.at(2)<<std::endl;
 			for(int i = 0; i < 9; i += 3)
 			{
-			    min_pt.x = std::min(min_pt.x, std::stod(tokenized.at(i  )));
-			    min_pt.y = std::min(min_pt.y, std::stod(tokenized.at(i+1)));
-			    min_pt.z = std::min(min_pt.z, std::stod(tokenized.at(i+2)));
+				glm::dvec3 pt{ std::stod(tokenized.at(i)), std::stod(tokenized.at(i + 1)), std::stod(tokenized.at(i + 2)) };
+
+				min_pt.x = std::min(min_pt.x, pt.x);
+			    min_pt.y = std::min(min_pt.y, pt.y);
+			    min_pt.z = std::min(min_pt.z, pt.z);
 			    
-			    max_pt.x = std::max(max_pt.x, std::stod(tokenized.at(i  )));
-			    max_pt.y = std::max(max_pt.y, std::stod(tokenized.at(i+1)));
-			    max_pt.z = std::max(max_pt.z, std::stod(tokenized.at(i+2)));
+			    max_pt.x = std::max(max_pt.x, pt.x);
+			    max_pt.y = std::max(max_pt.y, pt.y);
+			    max_pt.z = std::max(max_pt.z, pt.z);
 			    
-			    glm::dvec3 pt{std::stod(tokenized.at(i)), std::stod(tokenized.at(i+1)), std::stod(tokenized.at(i+2))};
     			points.push_back(pt);
 			}
         }
@@ -171,7 +183,7 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
                     //std::cout<<"points.size() "<<points.size()<<std::endl;
                     for(size_t i = 0; i < points.size()-1; i++)
                     {
-                        //aSkeletonLines->PushLine(points.at(i), points.at(i+1), iline_color);
+                        aSkeletonLines->PushLine(points.at(i), points.at(i+1), iline_color);
                     }
                     points.clear();
                 }
@@ -187,16 +199,16 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
                 //std::cout<<"points.size() "<<points.size()<<std::endl;
                 for(size_t i = 0; i < points.size()-1; i++)
                 {
-                    //aSkeletonLines->PushLine(points.at(i), points.at(i+1), iline_color);
+                    aSkeletonLines->PushLine(points.at(i), points.at(i+1), iline_color);
                 }
                 points.clear();
 				std::cout << "Skeleton read\n";
                 continue;
             }
-            
+
 			std::vector<std::string> tokenized;
 			m_Tokenize(line, " ", tokenized);
-			if(tokenized.size() != 6) 
+			if(tokenized.size() < 6) 
 			{
 			    std::cout << "Error when reading skeleton points\n";
 				std::cout << line << "\n";
@@ -204,16 +216,16 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 			    points.clear();
 			    break;
 			}
-			for(int i = 0; i < 6; i += 3)
+			//std::cout << "tokenized.size() " << tokenized.size() << std::endl;
+			for(int i = 0; i < tokenized.size(); i += 3)
 			{
-			    /*min_pt.x = std::min(min_pt.x, std::stod(tokenized.at(i  )));
-			    min_pt.y = std::min(min_pt.y, std::stod(tokenized.at(i+1)));
-			    min_pt.z = std::min(min_pt.z, std::stod(tokenized.at(i+2)));
-			    
-			    max_pt.x = std::max(max_pt.x, std::stod(tokenized.at(i  )));
-			    max_pt.y = std::max(max_pt.y, std::stod(tokenized.at(i+1)));
-			    max_pt.z = std::max(max_pt.z, std::stod(tokenized.at(i+2)));*/
-			    
+				/*min_pt.x = std::min(min_pt.x, std::stod(tokenized.at(i)));
+				min_pt.y = std::min(min_pt.y, std::stod(tokenized.at(i + 1)));
+				min_pt.z = std::min(min_pt.z, std::stod(tokenized.at(i + 2)));
+
+				max_pt.x = std::max(max_pt.x, std::stod(tokenized.at(i)));
+				max_pt.y = std::max(max_pt.y, std::stod(tokenized.at(i + 1)));
+				max_pt.z = std::max(max_pt.z, std::stod(tokenized.at(i + 2)));*/
 			    glm::dvec3 pt{std::stod(tokenized.at(i)), std::stod(tokenized.at(i+1)), std::stod(tokenized.at(i+2))};
     			points.push_back(pt);
 			}
@@ -331,11 +343,13 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 			{
 				continue;
 			}
-			if (line.find("# faces ") != std::string::npos)
+			if (line.find("# vertices") != std::string::npos)
 			{
+				read_tri_vertices = true;
+				read_tri_indices = false;
 				//std::cout<<line<<std::endl;
 				// add to drawable line
-				envelope_color.x = distribution(generator);
+				/*envelope_color.x = distribution(generator);
 				envelope_color.y = distribution(generator);
 				envelope_color.z = distribution(generator);
 				if (points.size() > 0)
@@ -343,23 +357,39 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 					//std::cout<<"points.size() "<<points.size()<<std::endl;
 					for (size_t i = 0; i < points.size() - 2; i = i + 3)
 					{
-						///aEnvelopeTri->PushTriangle(points.at(i), points.at(i + 1), points.at(i + 2), envelope_color);
+						aEnvelopeTri->PushTriangle(points.at(i), points.at(i + 1), points.at(i + 2), envelope_color);
 					}
 					points.clear();
-				}
+				}*/
+				continue;
+			}
+			if (line.find("# indices") != std::string::npos)
+			{
+				read_tri_vertices = false;
+				read_tri_indices = true;
 				continue;
 			}
 			if (line.find("### Envelope end") != std::string::npos)
 			{
+				read_tri_vertices = false;
+				read_tri_indices = false;
 				readEnvelope = false;
 				std::cout << "Envelope read\n";
-				///std::cout << aEnvelopeTri->GetTotalTriangles()<< "\n";
+				envelope_color.x = distribution(generator);
+				envelope_color.y = distribution(generator);
+				envelope_color.z = distribution(generator);
+
+				aEnvelopeTri->SetBuffers(points, normals, envelope_color, indices);
+				points.clear();
+				indices.clear();
+				normals.clear();
+				//std::cout << "aEnvelopeTri->GetTotalTriangles() "<< aEnvelopeTri->GetTotalTriangles()<< "\n";
 				continue;
 			}
 
 			std::vector<std::string> tokenized;
 			m_Tokenize(line, " ", tokenized);
-			if (tokenized.size() != 9)
+			if (tokenized.size() < 6)
 			{
 				std::cout << "Error when reading envelope points\n";
 				std::cout << line << "\n";
@@ -367,16 +397,38 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 				points.clear();
 				break;
 			}
-			for (int i = 0; i < 9; i += 3)
+			if (read_tri_indices)
 			{
-				glm::dvec3 pt{ std::stod(tokenized.at(i)), std::stod(tokenized.at(i + 1)), std::stod(tokenized.at(i + 2)) };
-				points.push_back(pt);
+				for (int i = 0; i < tokenized.size(); i++)
+				{
+					indices.push_back(std::stoi(tokenized.at(i)));
+					//std::cout << " " << std::stoi(tokenized.at(i));
+					//if(i%3 == 2) std::cout << std::endl;
+				}
+				//std::cout << std::endl;
+				tokenized.clear();
 			}
-			for (size_t i = 0; i < points.size() - 2; i = i + 3)
+			else if (read_tri_vertices)
 			{
-				///aEnvelopeTri->PushTriangle(points.at(i), points.at(i + 1), points.at(i + 2), envelope_color);
+				for (int i = 0; i < 3; i += 3)
+				{
+					glm::dvec3 pt{ std::stod(tokenized.at(i)), std::stod(tokenized.at(i + 1)), std::stod(tokenized.at(i + 2)) };
+					points.push_back(pt);
+					//std::cout << "read_tri_vertices " << pt.x << " " << pt.y << " " << pt.z << "\n";
+				}
+				for (int i = 3; i < 6; i += 3)
+				{
+					glm::dvec3 pt{ std::stod(tokenized.at(i)), std::stod(tokenized.at(i + 1)), std::stod(tokenized.at(i + 2)) };
+					normals.push_back(glm::normalize(pt));
+					//std::cout << "read_tri_normals " << pt.x << " " << pt.y << " " << pt.z << "\n";
+				}
+				/*for (size_t i = 0; i < points.size() - 2; i = i + 3)
+				{
+					aEnvelopeTri->PushTriangle(points.at(i), points.at(i + 1), points.at(i + 2), normals.at(i), envelope_color);
+				}
+				points.clear();*/
+				tokenized.clear();
 			}
-			points.clear();
 
 		}
         
@@ -396,16 +448,19 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
     t[2][0], t[2][1], t[2][2]};
     
     // Translating to a visible area
-    /*for(int i = 0; i < aGridLines->GetTotalLines() ; i++)
+	for(int i = 0; i < aGridLines->GetTotalLines() ; i++)
     {
         aGridLines->RotateLinePosition(i, rotation, center);
-        aGridLines->TranslateLinePosition(i, -center, -center);
+        aGridLines->TranslateLinePosition(i, -center);
     }
+	aGridLines->Update();
     for(int i = 0; i < aSkeletonLines->GetTotalLines() ; i++)
     {
         aSkeletonLines->RotateLinePosition(i, rotation, center);
-        aSkeletonLines->TranslateLinePosition(i, -center, -center);
+        aSkeletonLines->TranslateLinePosition(i, -center);
     }
+	aSkeletonLines->Update();
+    /*
     for(int i = 0; i < aCellLines->GetTotalLines() ; i++)
     {
         aCellLines->RotateLinePosition(i, rotation, center);
@@ -415,20 +470,18 @@ void GocadReader::ReadDebugLogger(const std::string &filepath)
 	{
 		aCellSpheres->RotateSpherePosition(i, rotation, center);
 		aCellSpheres->TranslateSpherePosition(i, -center);
-	}
-	for (int i = 0; i < aEnvelopeTri->GetTotalTriangles(); i++)
+	}*/
+	/*for (int i = 0; i < aEnvelopeTri->GetTotalTriangles(); i++)
 	{
 		aEnvelopeTri->RotateTrianglePosition(i, rotation, center);
 		aEnvelopeTri->TranslateTrianglePosition(i, -center);
 	}
-	aEnvelopeTri->Upload();*/
+	aEnvelopeTri->Update();*/
+	aEnvelopeTri->RotateTriangles(rotation, center);
+	aEnvelopeTri->TranslateTriangles(-center);
+	aEnvelopeTri->Update();
 	std::cout << "done\n";
     
-}
-/*
-DrawableLines* GocadReader::GetGridLines()
-{
-    return aGridLines;
 }
 
 DrawableLines* GocadReader::GetSkeletonLines()
@@ -436,6 +489,12 @@ DrawableLines* GocadReader::GetSkeletonLines()
     return aSkeletonLines;
 }
 
+DrawableLines* GocadReader::GetGridLines()
+{
+    return aGridLines;
+}
+
+/*
 DrawableLines* GocadReader::GetCellLines()
 {
     return aCellLines;
@@ -444,11 +503,11 @@ DrawableSpheres* GocadReader::GetCellSpheres()
 {
     return aCellSpheres;
 }
-
+*/
 DrawableTriangles* GocadReader::GetEnvelopetriangles()
 {
 	return aEnvelopeTri;
-}*/
+}
 
 void GocadReader::m_Tokenize(const std::string &text, const std::string &delimiters, std::vector<std::string> &tokenized)
 	{

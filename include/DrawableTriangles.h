@@ -16,33 +16,44 @@ class DrawableTriangles
         DrawableTriangles();
         virtual ~DrawableTriangles();
 		
-        /*void Draw();
+        void Draw(const glm::vec3 &lightPos, const glm::vec3 &lightColor);
 
-        void PushTriangle(const glm::vec3 &pos1, const glm::vec3 &pos2, const glm::vec3 &pos3, const glm::vec3 &color);
-        void PopTriangle();
-
-		void Upload();
+		void SetBuffers(const std::vector<glm::vec3> &vertices, const std::vector<glm::vec3> &normals, const glm::vec3 &color, const std::vector<GLuint> &indices);
+        //void PushTriangle(const glm::vec3 &pos1, const glm::vec3 &pos2, const glm::vec3 &pos3, const glm::vec3 &normal, const glm::vec3 &color);
+		void Update();
 
         int GetTotalTriangles();
 
-        void UpdateTrianglePosition(int index, const glm::vec3 &pos1, const glm::vec3 &pos2, const glm::vec3 &pos3);
-        void RotateTrianglePosition(int index, const glm::dmat3 &rotation, const glm::dvec3 &rot_pt);
+		void RotateTriangles(const glm::mat3 &rotation, const glm::vec3 &rot_pt);
+		void TranslateTriangles(const glm::vec3 &translation);
+
+        void RotateTrianglePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt);
         void TranslateTrianglePosition(int index, const glm::vec3 &translation);
+        /*void PopTriangle();
+
+
+        void UpdateTrianglePosition(int index, const glm::vec3 &pos1, const glm::vec3 &pos2, const glm::vec3 &pos3);
         void UpdateTriangleColor(int index, const glm::vec3 &color);
         void DeleteTriangleAt(int index);*/
 		
     private:
     
-		using mTriangle = 
+		/*using mTriangle = 
 		struct
 		{
 			glm::vec3 mPosition1;
 			glm::vec3 mPosition2;
 			glm::vec3 mPosition3;
+			glm::vec3 mNormal;
 			glm::vec3 mColor;
 		};
 		
-        std::vector<mTriangle*> mTriangleData;
+        std::vector<mTriangle*> mTriangleData;*/
+
+		std::vector<glm::vec3> mVertices;
+		std::vector<glm::vec3> mNormals;
+		std::vector<GLuint> mIndices;
+		glm::vec3 mColor;
 
 		Shader *mTriangleShader;
         

@@ -1092,14 +1092,14 @@ int main(int argc, char** args)
 	WindowGLFW *glfw = new WindowGLFW(false, "teste", 1080, 720);
 	glfw->InitializeWindow(); // will init GLEW and GLFW
 
-	/*std::cout << "GocadReader\n";
+	std::cout << "GocadReader\n";
 	GocadReader *gr = new GocadReader();
 	gr->ReadDebugLogger(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../DebugLogger.txt"));
-	//glfw->AppendDrawableLine(gr->GetGridLines());
+	glfw->AppendDrawableLine(gr->GetGridLines());
 	glfw->AppendDrawableLine(gr->GetSkeletonLines());
-	glfw->AppendDrawableLine(gr->GetCellLines());
-	glfw->AppendDrawableSphere(gr->GetCellSpheres());
-	glfw->AppendDrawableTriangle(gr->GetEnvelopetriangles());*/
+	/*glfw->AppendDrawableLine(gr->GetCellLines());
+	glfw->AppendDrawableSphere(gr->GetCellSpheres());*/
+	glfw->AppendDrawableTriangle(gr->GetEnvelopetriangles());
 	glfw->Run();
 
 	return 0;

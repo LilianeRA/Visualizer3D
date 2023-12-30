@@ -408,6 +408,21 @@ void Shader::DrawShader(const std::vector<glm::vec3> *offset, const std::vector<
 		}
 		glCheckError();
 	}
+	if (mMode == mObjectToDraw::mTriangle)
+	{
+		glEnableVertexAttribArray(mVertexColorID);
+		glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
+		glVertexAttribPointer(mVertexColorID, 3, GL_FLOAT, GL_FALSE, (0), (void*)0);
+		glCheckError();
+		glEnableVertexAttribArray(mVertexNormalID);
+		glBindBuffer(GL_ARRAY_BUFFER, mNormalBuffer);
+		glVertexAttribPointer(mVertexNormalID, 3, GL_FLOAT, GL_FALSE, (0), (void*)0);
+		glCheckError();
+		mSetUniformVec3("u_lightPos", *lightPos);
+		mSetUniformVec3("u_lightColor", *lightColor);
+		glDrawElements(GL_TRIANGLES, mNumberOfIndices, GL_UNSIGNED_INT, 0);
+		glCheckError();
+	}
 	glCheckError();
 	//glDisableVertexAttribArray(mVertexPositionID);
 	//glDisableVertexAttribArray(mVertexColorID);

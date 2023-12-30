@@ -243,6 +243,7 @@ void WindowGLFW::InitializeSpheresShaders()
 }
 
 
+
 /// EXECUTION
 void WindowGLFW::Run()
 {
@@ -293,7 +294,7 @@ void WindowGLFW::Run()
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-			mMoveCamera = !ImGui::IsWindowHovered();
+			mMoveCamera = !ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive();
 			ImGui::End();
 		}
 
@@ -364,18 +365,18 @@ void WindowGLFW::Draw()
 	mAxis->Draw();
 	mDrawableSpheres->Draw(mLightPos, mLightColor);
 	
-	/*for(const auto dl : mOtherLines)
+	for(const auto dl : mOtherLines)
 	{
 	    dl->Draw();
 	}
-	for(const auto ds : mOtherSpheres)
+	/*for(const auto ds : mOtherSpheres)
 	{
 	    ds->Draw();
-	}
+	}*/
 	for(const auto dt : mOtherTriangles)
 	{
-	    dt->Draw();
-	}*/
+	    dt->Draw(mLightPos, mLightColor);
+	}
 
 
 
@@ -402,7 +403,7 @@ void WindowGLFW::Draw()
     glPopMatrix();
 
     glLineWidth(1.0f);
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
 
 }
 
@@ -498,7 +499,7 @@ void WindowGLFW::MouseCallback(GLFWwindow * window, double x, double y)
     mStaticWindow->MouseUpdate();
 }
 
-/*void WindowGLFW::AppendDrawableLine(DrawableLines *dl)
+void WindowGLFW::AppendDrawableLine(DrawableLines *dl)
 {
     if(dl)
     {
@@ -507,7 +508,7 @@ void WindowGLFW::MouseCallback(GLFWwindow * window, double x, double y)
     }
 }   
 
-
+/*
 void WindowGLFW::AppendDrawableSphere(DrawableSpheres *ds)
 {
     if(ds)
@@ -517,16 +518,16 @@ void WindowGLFW::AppendDrawableSphere(DrawableSpheres *ds)
     }
 
 }
-
+*/
 void WindowGLFW::AppendDrawableTriangle(DrawableTriangles *dt)
 {
     if(dt)
     {
 		mOtherTriangles.push_back(dt);
-        std::cout<< "mOtherTriangles "<< mOtherTriangles.size()<<std::endl;
     }
+    std::cout<< "mOtherTriangles "<< mOtherTriangles.size()<<std::endl;
 
-}*/
+}
 
 /// TERMINATE
 void WindowGLFW::Shutdown()
@@ -543,17 +544,17 @@ void WindowGLFW::Shutdown()
 	ImGui::DestroyContext();
 
 	// Cleanup VBO and shader
-	/*delete mDrawableSpheres;
+	delete mDrawableSpheres;
 	delete mAxis;
 	for(auto dl : mOtherLines)
 	    delete dl;
 	mOtherLines.clear();
-	for(auto ds : mOtherSpheres)
+	/*for(auto ds : mOtherSpheres)
 	    delete ds;
-	mOtherSpheres.clear();
+	mOtherSpheres.clear();*/
 	for(auto dt : mOtherTriangles)
 	    delete dt;
-	mOtherTriangles.clear();*/
+	mOtherTriangles.clear();
 }
 
 void WindowGLFW::Exit()

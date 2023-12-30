@@ -3,9 +3,9 @@
 
 #include <string>
 #include <vector>
-/*#include <DrawableLines.h>
-#include <DrawableSpheres.h>
-#include <DrawableTriangles.h>*/
+#include <DrawableLines.h>
+//#include <DrawableSpheres.h>
+#include <DrawableTriangles.h>
 
 class GocadReader
 {
@@ -14,19 +14,20 @@ class GocadReader
         virtual ~GocadReader();
         
 		void ReadDebugLogger(const std::string &filepath);
-		/*DrawableLines* GetGridLines();
 		DrawableLines* GetSkeletonLines();
-		DrawableLines* GetCellLines();
-		DrawableSpheres* GetCellSpheres();
-		DrawableTriangles* GetEnvelopetriangles();*/
+		DrawableLines* GetGridLines();
+		/*DrawableLines* GetCellLines();
+		DrawableSpheres* GetCellSpheres();*/
+		DrawableTriangles* GetEnvelopetriangles();
     protected:
 
     private:
-    	/*DrawableLines *aGridLines;
+		DrawableLines *aGridLines;
     	DrawableLines *aSkeletonLines;
+    	/*
     	DrawableLines *aCellLines;
-    	DrawableSpheres *aCellSpheres;
-		DrawableTriangles *aEnvelopeTri;*/
+    	DrawableSpheres *aCellSpheres;*/
+		DrawableTriangles *aEnvelopeTri;
         void m_Tokenize(const std::string &text, const std::string &delimiters, std::vector<std::string> &tokenized);
         
 };
