@@ -26,6 +26,8 @@ class Camera3D
         void MouseUpdate(bool update);
 
         glm::mat4 ViewProjectionMatrix() const;
+		void Pan(glm::vec2 pan);
+		void Orbit(glm::vec2 delta);
 
     protected:
 
@@ -53,8 +55,6 @@ class Camera3D
 		bool mCameraHasChanged;
 
         /// Movement
-		void Pan(glm::vec2 pan);
-		void Orbit(glm::vec2 delta);
         void Zoom(float times);
 
 		/// updates

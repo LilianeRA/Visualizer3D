@@ -3,6 +3,9 @@
 
 #include "glad/glad.h"
 #include <vector>
+#include <string>
+#include <iostream>
+#include <unordered_map>
 
 //GLM Math Headers
 #include <glm/vec3.hpp> // glm::vec3
@@ -17,6 +20,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/norm.hpp>*/
+
 class Shader
 {
 public:
@@ -27,7 +31,11 @@ public:
 
 	bool LoadShaders(const char * vertex_file_path, const char * fragment_file_path);
 	void SetBuffers(const std::vector<glm::vec3> &vertices, const std::vector<GLuint> &indices, const std::vector<glm::vec3> &colors);
-	void DrawShader();
+
+
+	void DrawShader(const std::vector<glm::vec3> *offset = nullptr, 
+					const std::vector<GLfloat> *radius = nullptr, 
+					const std::vector<glm::vec3> *colors = nullptr);
 	/*void SetRadius(std::vector<GLfloat> &radius);
 	void SetOffset(std::vector<glm::vec3> &offset);
 	void UseShader();
@@ -58,6 +66,12 @@ private:
 	/*std::vector<GLfloat> mRadius;
 	std::vector<glm::vec3> mOffset;
 	std::vector<glm::vec3> mColors;*/
+
+	mutable std::unordered_map<std::string, GLint> mUniformCache;
+
+	void mSetUniform1f(const std::string &name, float value);
+	void mSetUniformVec3(const std::string &name, const glm::vec3 &value);
+	GLint mGetUniformLocation(const std::string &name) const;
 
 	void SetModelviewMatrix();
 	void CleanUp();

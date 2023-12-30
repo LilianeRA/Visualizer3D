@@ -118,8 +118,6 @@ void Camera3D::MouseUpdate(bool update)
 	ImGuiKey mouseLeft{ 641 };
 	ImGuiKey mouseRight{ 642 };
 	ImGuiKey mouseMiddle{ 643 };
-	ImGuiKey mouseWheel{ 647 };
-
 
 	ImGuiIO& io = ImGui::GetIO(); 
 	double deltaX = io.MouseDelta.x; //mMouse->MouseDeltaX();
@@ -134,7 +132,6 @@ void Camera3D::MouseUpdate(bool update)
     else if(ImGui::IsKeyDown(mouseLeft))
     {
         Orbit(glm::vec2(-deltaX / mScreenWidth, -deltaY / mScreenWidth));
-	std::cout << deltaX << " " << deltaY << std::endl;
     }
     else if(ImGui::IsKeyDown(mouseMiddle))
     {
@@ -155,7 +152,7 @@ void Camera3D::Update()
 
 void Camera3D::UpdateViewMatrix()
 {
-    mViewMatrix = lookAt(mPosition, mFocus, mUp);
+    mViewMatrix = glm::lookAt(mPosition, mFocus, mUp);
 }
 
 void Camera3D::UpdateProjectionMatrix()

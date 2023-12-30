@@ -9,16 +9,8 @@
 #include <sstream>
 #include <vector>
 
-/*#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/euler_angles.hpp>
-#include <glm/gtx/norm.hpp>*/
 
-
-GLenum glCheckError_(const char *file, int line)
+GLenum glCheckError_3(const char *file, int line)
 {
 	GLenum errorCode;
 	while ((errorCode = glGetError()) != GL_NO_ERROR)
@@ -38,7 +30,7 @@ GLenum glCheckError_(const char *file, int line)
 	}
 	return errorCode;
 }
-#define glCheckError() glCheckError_(__FILE__, __LINE__) 
+#define glCheckError3() glCheckError_3(__FILE__, __LINE__) 
 
 static WindowGLFW *mStaticWindow = nullptr;
 
@@ -57,9 +49,9 @@ WindowGLFW::WindowGLFW(bool bidimensional, const std::string &title, int width, 
     mElapsedTime = 0.0;
     mCamera3D = nullptr;
     /*mCamera2D = nullptr;
-    mMouse = nullptr;
+    mMouse = nullptr;*/
     mDrawableSpheres = nullptr;
-	mAxis = nullptr;*/
+	mAxis = nullptr;
 
     nada = true;
 
@@ -139,6 +131,7 @@ void WindowGLFW::InitializeWindow()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE); // GLFW_OPENGL_CORE_PROFILE thinks glPushMatrix is deprecated.
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // to use legacy functions of OpenGL
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
     mWindow = glfwCreateWindow(mScreenWidth, mScreenHeight, mWindowTitle.c_str(), nullptr, nullptr);
@@ -151,7 +144,6 @@ void WindowGLFW::InitializeWindow()
 
     glfwMakeContextCurrent(mWindow);
     glfwSwapInterval(1);
-	//gladLoadGL();
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -176,11 +168,13 @@ void WindowGLFW::InitializeWindow()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glClearColor(0.95, 0.95, 0.95, 1.0f); // will possibly be changed by ImGUI
+	glCheckError3();
 
     //Callback de teclas
     glfwSetCursorPosCallback(mWindow, MouseCallback);
     glfwSetWindowSizeCallback(mWindow, ResizeCallback);
     glfwSetKeyCallback(mWindow, KeyboardCallback);
+	glCheckError3();
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -239,9 +233,11 @@ void WindowGLFW::InitializeAxisShaders()
 
 void WindowGLFW::InitializeSpheresShaders()
 {
-	/*mDrawableSpheres = new DrawableSpheres();
-	mDrawableSpheres->PushSphere(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0), 2.0);
-	mDrawableSpheres->PushSphere(glm::vec3(10.0, 10.0, 0.0), glm::vec3(0.0, 1.0, 1.0), 4.0);*/
+	mDrawableSpheres = new DrawableSpheres();
+	mDrawableSpheres->PushSphere(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.5, 0.0), 2.0);
+	mDrawableSpheres->PushSphere(glm::vec3(10.0, 10.0, 0.0), glm::vec3(0.0, 0.0, 0.5), 4.0);
+	mDrawableSpheres->Update();
+	glCheckError3();
 }
 
 
@@ -256,7 +252,7 @@ void WindowGLFW::Run()
     //InitializeWindow();
     ResetTime();
     InitializeAxisShaders();
-    //InitializeSpheresShaders();
+    InitializeSpheresShaders();
 
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	bool show_demo_window = true;
@@ -303,7 +299,7 @@ void WindowGLFW::Run()
 		glfwMakeContextCurrent(mWindow);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
-        
+
 		Update(); 
 
         Draw();
@@ -362,7 +358,7 @@ void WindowGLFW::Draw()
 	mAxisShader->DisableVertexAttribArrayColor();*/
 
 	mAxis->Draw();
-	//mDrawableSpheres->Draw();
+	mDrawableSpheres->Draw();
 	
 	/*for(const auto dl : mOtherLines)
 	{

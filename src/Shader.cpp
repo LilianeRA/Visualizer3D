@@ -5,11 +5,38 @@
 #include <algorithm>
 #include <glm/gtc/type_ptr.hpp>
 
-Shader::Shader(mObjectToDraw mode)
+
+
+GLenum glCheckError_(const char *file, int line)
+{
+	GLenum errorCode;
+	while ((errorCode = glGetError()) != GL_NO_ERROR)
+	{
+		std::string error{ "None" };
+		switch (errorCode)
+		{
+		case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
+		case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
+		case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
+		case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
+		case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
+		case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
+		}
+		std::cout << error << " | " << file << " (" << line << ")" << std::endl;
+	}
+	return errorCode;
+}
+#define glCheckError() glCheckError_(__FILE__, __LINE__) 
+
+
+
+Shader::Shader(mObjectToDraw mode) :
+	mProgramID(INT_MAX), mVertexArray(INT_MAX), mVertexBuffer(INT_MAX), mColorBuffer(INT_MAX), mIndexBuffer(INT_MAX),
+	mPerFrameDataBuffer(INT_MAX), mMatrixID(INT_MAX), mVertexPositionID(INT_MAX), mVertexColorID(INT_MAX),
+	mMode(mode), mNumberOfVertices(0)
 {
 	//ctor
-	mMode = mode;
-	mNumberOfVertices = 0;
 }
 
 Shader::~Shader()
@@ -117,6 +144,7 @@ bool Shader::LoadShaders(const char * vertex_file_path, const char * fragment_fi
 	glDeleteShader(FragmentShaderID);
 
 	std::cout << "mProgramID " << mProgramID << std::endl;
+	glCheckError();
 	//return ProgramID;
 	return true;
 }
@@ -124,43 +152,57 @@ bool Shader::LoadShaders(const char * vertex_file_path, const char * fragment_fi
 void Shader::SetBuffers(const std::vector<glm::vec3> &vertices, const std::vector<GLuint> &indices, const std::vector<glm::vec3> &colors)
 {
 	glUseProgram(mProgramID);
+	glCheckError();
 
 	glCreateVertexArrays(1, &mVertexArray);
 	glBindVertexArray(mVertexArray);
+	glCheckError();
 
 	glGenBuffers(1, &mVertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), vertices.data(), GL_STATIC_DRAW);
+	glCheckError();
 
-	glGenBuffers(1, &mColorBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*colors.size(), colors.data(), GL_STATIC_DRAW);
+	if (colors.size() > 0)
+	{
+		glGenBuffers(1, &mColorBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*colors.size(), colors.data(), GL_STATIC_DRAW);
+		glCheckError();
+	}
 
 	glGenBuffers(1, &mIndexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*indices.size(), indices.data(), GL_STATIC_DRAW);
+	glCheckError();
 
 	glCreateBuffers(1, &mPerFrameDataBuffer);
 	glNamedBufferStorage(mPerFrameDataBuffer, sizeof(glm::mat4), nullptr, GL_DYNAMIC_STORAGE_BIT);
 	glBindBuffer(GL_UNIFORM_BUFFER, mPerFrameDataBuffer);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, mPerFrameDataBuffer);
+	glCheckError();
 
 
-	mMatrixID = glGetUniformLocation(mProgramID, "MVP");
-	mVertexPositionID = 0; // glGetAttribLocation(mProgramID, "vPos");
-	mVertexColorID = 1;// glGetAttribLocation(mProgramID, "vColor");
+	mMatrixID = mGetUniformLocation("MVP"); // glGetUniformLocation(mProgramID, "MVP");
+	mVertexPositionID = glGetAttribLocation(mProgramID, "vPos"); // 0;  
+	if (colors.size() > 0)
+	{
+		mVertexColorID = glGetAttribLocation(mProgramID, "vColor"); ; // 1; 
+	}
+	glCheckError();
 
 	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
 	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
 	glBindVertexArray(0);
 	glUseProgram(0);
+	glCheckError();
 
 	mNumberOfIndices = indices.size();
 	mNumberOfVertices = vertices.size();
 	/*std::cout << "mVertexPositionID " << mVertexPositionID << std::endl;
-	std::cout << "mVertexColorID    " << mVertexColorID << std::endl;
+	std::cout << "mVertexColorID    " << mVertexColorID << std::endl;*/
 	std::cout << "mNumberOfVertices " << mNumberOfVertices << std::endl;
-	std::cout << "mNumberOfIndices  " << mNumberOfIndices << std::endl;*/
+	std::cout << "mNumberOfIndices  " << mNumberOfIndices << std::endl;
 
 	/*//UseShader();
 	// set up vertex data (and buffer(s)) and configure vertex attributes
@@ -224,6 +266,32 @@ void Shader::SetBuffers(const std::vector<glm::vec3> &vertices, const std::vecto
 	mColors = colors;*/
 }
 
+void Shader::mSetUniform1f(const std::string &name, float value)
+{
+	GLint location = mGetUniformLocation(name);
+	glCheckError();
+	glUniform1f(location, value);
+	glCheckError();
+}
+
+void Shader::mSetUniformVec3(const std::string &name, const glm::vec3 &value)
+{
+	GLint location = mGetUniformLocation(name);
+	glCheckError();
+	glUniform3f(location, value.x, value.y, value.z);
+	glCheckError();
+}
+
+GLint Shader::mGetUniformLocation(const std::string &name) const
+{
+	//std::cout << name<< std::endl;
+	if (mUniformCache.find(name) == mUniformCache.end())
+	{
+		mUniformCache[name] = glGetUniformLocation(mProgramID, name.c_str());
+	}
+	return mUniformCache[name];
+}
+
 /*void Shader::SetColors(std::vector<glm::vec3> &colors)
 {
 	UseShader();
@@ -276,8 +344,10 @@ void Shader::SetModelviewMatrix()
 	//glm::mat4 modelview;
 	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
 	glUniformMatrix4fv(mMatrixID, 1, GL_FALSE, modelview);
+	glCheckError();
 	
 	glNamedBufferSubData(mPerFrameDataBuffer, 0, sizeof(glm::mat4),modelview);
+	glCheckError();
 }
 
 void APIENTRY glDebugOutput(GLenum source,
@@ -327,26 +397,48 @@ void APIENTRY glDebugOutput(GLenum source,
 	std::cout << std::endl;
 }
 
-void Shader::DrawShader()
+void Shader::DrawShader(const std::vector<glm::vec3> *offset, const std::vector<GLfloat> *radius, const std::vector<glm::vec3> *colors)
 {
+	glCheckError();
 	glUseProgram(mProgramID);
+	glCheckError();
 	glBindVertexArray(mVertexArray); // to prevent the error: Invalid VAO/VBO/pointer usage
+	glCheckError();
 
 	SetModelviewMatrix();
+	glCheckError();
 
 	glEnableVertexAttribArray(mVertexPositionID); 
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
 	glVertexAttribPointer(mVertexPositionID, 3, GL_FLOAT, GL_FALSE, (0), (void*)0);
+	glCheckError();
 
-	glEnableVertexAttribArray(mVertexColorID); 
-	glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer); 
-	glVertexAttribPointer(mVertexColorID, 3, GL_FLOAT, GL_FALSE, (0), (void*)0);
 
 	if (mMode == mObjectToDraw::mLine)
 	{
+		glEnableVertexAttribArray(mVertexColorID); 
+		glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer); 
+		glVertexAttribPointer(mVertexColorID, 3, GL_FLOAT, GL_FALSE, (0), (void*)0);
+		glCheckError();
 		glDrawElements(GL_LINES, mNumberOfIndices, GL_UNSIGNED_INT, 0);
+		glCheckError();
 		//glDrawArrays(GL_LINES, 0, mNumberOfVertices);
 	}
+	glCheckError();
+	if (mMode == mObjectToDraw::mSphere)
+	{
+		for (unsigned int i = 0; i < radius->size(); i++)
+		{
+			mSetUniformVec3("u_color", colors->at(i));
+			mSetUniformVec3("u_offset", offset->at(i));
+			mSetUniform1f("u_radius", radius->at(i));
+			glDrawElements(GL_TRIANGLES, mNumberOfIndices, GL_UNSIGNED_INT, 0);
+		}
+		glCheckError();
+	}
+	glCheckError();
+	//glDisableVertexAttribArray(mVertexPositionID);
+	//glDisableVertexAttribArray(mVertexColorID);
 	glUseProgram(0);
 
 

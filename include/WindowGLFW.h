@@ -1,7 +1,7 @@
 #ifndef WINDOWGLFW_H
 #define WINDOWGLFW_H
 
-//#include "DrawableSpheres.h"
+#include "DrawableSpheres.h"
 #include "DrawableLines.h"
 //#include "DrawableTriangles.h"
 #include "Camera3D.h"
@@ -52,15 +52,10 @@ class WindowGLFW
 
         /// Shader attributes
 		DrawableLines *mAxis;
-        /*DrawableSpheres *mDrawableSpheres;
+        DrawableSpheres *mDrawableSpheres;
         
 
-		unsigned int shaderProgram1, shaderProgram2;
-		unsigned int VAO1, VAO2;
-		unsigned int VBO1, VBO2;
-		unsigned int EBO1, EBO2;
-
-
+		/*
         std::vector<DrawableLines*> mOtherLines;
 		std::vector<DrawableSpheres*> mOtherSpheres;
 		std::vector<DrawableTriangles*> mOtherTriangles;*/

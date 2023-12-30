@@ -1,0 +1,51 @@
+#ifndef DRAWABLETRIANGLES_H
+#define DRAWABLETRIANGLES_H
+
+#include "Shader.h"
+
+//GLM Math Headers
+#include <glm/vec3.hpp> // glm::vec3
+#include <glm/vec4.hpp> // glm::vec4
+#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
+
+
+class DrawableTriangles
+{
+    public:
+        DrawableTriangles();
+        virtual ~DrawableTriangles();
+		
+        /*void Draw();
+
+        void PushTriangle(const glm::vec3 &pos1, const glm::vec3 &pos2, const glm::vec3 &pos3, const glm::vec3 &color);
+        void PopTriangle();
+
+		void Upload();
+
+        int GetTotalTriangles();
+
+        void UpdateTrianglePosition(int index, const glm::vec3 &pos1, const glm::vec3 &pos2, const glm::vec3 &pos3);
+        void RotateTrianglePosition(int index, const glm::dmat3 &rotation, const glm::dvec3 &rot_pt);
+        void TranslateTrianglePosition(int index, const glm::vec3 &translation);
+        void UpdateTriangleColor(int index, const glm::vec3 &color);
+        void DeleteTriangleAt(int index);*/
+		
+    private:
+    
+		using mTriangle = 
+		struct
+		{
+			glm::vec3 mPosition1;
+			glm::vec3 mPosition2;
+			glm::vec3 mPosition3;
+			glm::vec3 mColor;
+		};
+		
+        std::vector<mTriangle*> mTriangleData;
+
+		Shader *mTriangleShader;
+        
+};
+
+#endif // DRAWABLETRIANGLES_H
