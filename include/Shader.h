@@ -30,12 +30,15 @@ public:
 	virtual ~Shader();
 
 	bool LoadShaders(const char * vertex_file_path, const char * fragment_file_path);
-	void SetBuffers(const std::vector<glm::vec3> &vertices, const std::vector<GLuint> &indices, const std::vector<glm::vec3> &colors);
+	void SetBuffers(const std::vector<glm::vec3> &vertices, const std::vector<GLuint> &indices, 
+		const std::vector<glm::vec3> *colors = nullptr, const std::vector<glm::vec3> *normals = nullptr);
 
 
 	void DrawShader(const std::vector<glm::vec3> *offset = nullptr, 
 					const std::vector<GLfloat> *radius = nullptr, 
-					const std::vector<glm::vec3> *colors = nullptr);
+					const std::vector<glm::vec3> *colors = nullptr,
+					const glm::vec3 *lightPos = nullptr, 
+					const glm::vec3 *lightColor = nullptr);
 	/*void SetRadius(std::vector<GLfloat> &radius);
 	void SetOffset(std::vector<glm::vec3> &offset);
 	void UseShader();
@@ -53,12 +56,14 @@ private:
 	GLuint mVertexArray;
 	GLuint mVertexBuffer;
 	GLuint mColorBuffer;
+	GLuint mNormalBuffer;
 	GLuint mIndexBuffer;
 	GLuint mPerFrameDataBuffer;
 	// Shader variables
 	GLuint mMatrixID;
 	GLuint mVertexPositionID;
 	GLuint mVertexColorID;
+	GLuint mVertexNormalID;
 
 	mObjectToDraw mMode;
 	unsigned int mNumberOfVertices;

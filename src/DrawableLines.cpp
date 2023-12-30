@@ -66,7 +66,7 @@ void DrawableLines::Update()
 		colors.push_back(mLineData.at(i)->mColor);
     }
 
-	mLineShader->SetBuffers(vertices, indices, colors);
+	mLineShader->SetBuffers(vertices, indices, &colors);
 
 	vertices.clear();
 	indices.clear();

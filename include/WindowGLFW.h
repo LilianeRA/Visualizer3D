@@ -53,6 +53,8 @@ class WindowGLFW
         /// Shader attributes
 		DrawableLines *mAxis;
         DrawableSpheres *mDrawableSpheres;
+		glm::vec3 mLightPos;
+		glm::vec3 mLightColor;
         
 
 		/*

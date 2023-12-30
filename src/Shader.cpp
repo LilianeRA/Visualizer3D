@@ -32,8 +32,8 @@ GLenum glCheckError_(const char *file, int line)
 
 
 Shader::Shader(mObjectToDraw mode) :
-	mProgramID(INT_MAX), mVertexArray(INT_MAX), mVertexBuffer(INT_MAX), mColorBuffer(INT_MAX), mIndexBuffer(INT_MAX),
-	mPerFrameDataBuffer(INT_MAX), mMatrixID(INT_MAX), mVertexPositionID(INT_MAX), mVertexColorID(INT_MAX),
+	mProgramID(INT_MAX), mVertexArray(INT_MAX), mVertexBuffer(INT_MAX), mColorBuffer(INT_MAX), mNormalBuffer(INT_MAX), mIndexBuffer(INT_MAX),
+	mPerFrameDataBuffer(INT_MAX), mMatrixID(INT_MAX), mVertexPositionID(INT_MAX), mVertexColorID(INT_MAX), mVertexNormalID(INT_MAX),
 	mMode(mode), mNumberOfVertices(0)
 {
 	//ctor
@@ -149,7 +149,8 @@ bool Shader::LoadShaders(const char * vertex_file_path, const char * fragment_fi
 	return true;
 }
 
-void Shader::SetBuffers(const std::vector<glm::vec3> &vertices, const std::vector<GLuint> &indices, const std::vector<glm::vec3> &colors)
+void Shader::SetBuffers(const std::vector<glm::vec3> &vertices, const std::vector<GLuint> &indices, 
+	const std::vector<glm::vec3> *colors, const std::vector<glm::vec3> *normals)
 {
 	glUseProgram(mProgramID);
 	glCheckError();
@@ -163,11 +164,18 @@ void Shader::SetBuffers(const std::vector<glm::vec3> &vertices, const std::vecto
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), vertices.data(), GL_STATIC_DRAW);
 	glCheckError();
 
-	if (colors.size() > 0)
+	if (colors)
 	{
 		glGenBuffers(1, &mColorBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*colors.size(), colors.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*colors->size(), colors->data(), GL_STATIC_DRAW);
+		glCheckError();
+	}
+	if (normals)
+	{
+		glGenBuffers(1, &mNormalBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mNormalBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*normals->size(), normals->data(), GL_STATIC_DRAW);
 		glCheckError();
 	}
 
@@ -185,9 +193,13 @@ void Shader::SetBuffers(const std::vector<glm::vec3> &vertices, const std::vecto
 
 	mMatrixID = mGetUniformLocation("MVP"); // glGetUniformLocation(mProgramID, "MVP");
 	mVertexPositionID = glGetAttribLocation(mProgramID, "vPos"); // 0;  
-	if (colors.size() > 0)
+	if (colors)
 	{
-		mVertexColorID = glGetAttribLocation(mProgramID, "vColor"); ; // 1; 
+		mVertexColorID = glGetAttribLocation(mProgramID, "vColor"); // 1; 
+	}
+	if (normals)
+	{
+		mVertexNormalID = glGetAttribLocation(mProgramID, "vNormal"); 
 	}
 	glCheckError();
 
@@ -350,54 +362,8 @@ void Shader::SetModelviewMatrix()
 	glCheckError();
 }
 
-void APIENTRY glDebugOutput(GLenum source,
-	GLenum type,
-	unsigned int id,
-	GLenum severity,
-	GLsizei length,
-	const char *message,
-	const void *userParam)
-{
-	// ignore non-significant error/warning codes
-	if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
-
-	std::cout << "---------------" << std::endl;
-	std::cout << "Debug message (" << id << "): " << message << std::endl;
-
-	switch (source)
-	{
-	case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
-	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
-	case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
-	case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
-	case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
-	case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
-	} std::cout << std::endl;
-
-	switch (type)
-	{
-	case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
-	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
-	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break;
-	case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
-	case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
-	case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
-	case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
-	case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
-	case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
-	} std::cout << std::endl;
-
-	switch (severity)
-	{
-	case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
-	case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
-	case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
-	case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
-	} std::cout << std::endl;
-	std::cout << std::endl;
-}
-
-void Shader::DrawShader(const std::vector<glm::vec3> *offset, const std::vector<GLfloat> *radius, const std::vector<glm::vec3> *colors)
+void Shader::DrawShader(const std::vector<glm::vec3> *offset, const std::vector<GLfloat> *radius, const std::vector<glm::vec3> *colors,
+	const glm::vec3 *lightPos, const glm::vec3 *lightColor)
 {
 	glCheckError();
 	glUseProgram(mProgramID);
@@ -427,6 +393,12 @@ void Shader::DrawShader(const std::vector<glm::vec3> *offset, const std::vector<
 	glCheckError();
 	if (mMode == mObjectToDraw::mSphere)
 	{
+		glEnableVertexAttribArray(mVertexNormalID);
+		glBindBuffer(GL_ARRAY_BUFFER, mNormalBuffer);
+		glVertexAttribPointer(mVertexNormalID, 3, GL_FLOAT, GL_FALSE, (0), (void*)0);
+		glCheckError();
+		mSetUniformVec3("u_lightPos", *lightPos);
+		mSetUniformVec3("u_lightColor", *lightColor);
 		for (unsigned int i = 0; i < radius->size(); i++)
 		{
 			mSetUniformVec3("u_color", colors->at(i));
@@ -511,6 +483,7 @@ void Shader::CleanUp()
 	glDeleteBuffers(1, &mIndexBuffer);
 	glDeleteBuffers(1, &mVertexBuffer);
 	glDeleteBuffers(1, &mColorBuffer);
+	glDeleteBuffers(1, &mNormalBuffer);
 	glDeleteBuffers(1, &mPerFrameDataBuffer);
 	glDeleteProgram(mProgramID);
 }

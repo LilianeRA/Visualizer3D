@@ -53,6 +53,9 @@ WindowGLFW::WindowGLFW(bool bidimensional, const std::string &title, int width, 
     mDrawableSpheres = nullptr;
 	mAxis = nullptr;
 
+	mLightPos = glm::vec3{ 102.0f, 100.0f, 200.0f };
+	mLightColor = glm::vec3{ 1.0f, 1.0f, 1.0f };
+
     nada = true;
 
     if(!mBidimensional)
@@ -167,8 +170,7 @@ void WindowGLFW::InitializeWindow()
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.95, 0.95, 0.95, 1.0f); // will possibly be changed by ImGUI
-	glCheckError3();
+    //glClearColor(0.95, 0.95, 0.95, 1.0f); // will possibly be changed by ImGUI
 
     //Callback de teclas
     glfwSetCursorPosCallback(mWindow, MouseCallback);
@@ -280,6 +282,8 @@ void WindowGLFW::Run()
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 
 			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::SliderFloat3("Light Pos", &mLightPos.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+			ImGui::ColorEdit3("Light Color", (float*)&mLightColor); // Edit 3 floats representing a color
 			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
 			if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
@@ -358,7 +362,7 @@ void WindowGLFW::Draw()
 	mAxisShader->DisableVertexAttribArrayColor();*/
 
 	mAxis->Draw();
-	mDrawableSpheres->Draw();
+	mDrawableSpheres->Draw(mLightPos, mLightColor);
 	
 	/*for(const auto dl : mOtherLines)
 	{

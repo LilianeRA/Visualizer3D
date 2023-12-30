@@ -15,7 +15,7 @@ class DrawableSpheres
         DrawableSpheres(int slices = 6, int stacks = 4);
         ~DrawableSpheres();
         
-        void Draw();
+        void Draw(const glm::vec3 &lightPos, const glm::vec3 &lightColor);
 
         void PushSphere(glm::vec3 position, glm::vec3 color, float radius);
         /*void PopSphere();

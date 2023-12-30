@@ -28,17 +28,14 @@ GLenum glCheckError_2(const char *file, int line)
 #define glCheckError2() glCheckError_2(__FILE__, __LINE__) 
 
 
-DrawableSpheres::DrawableSpheres(int slices, int stacks)
+DrawableSpheres::DrawableSpheres(int slices, int stacks) :
+	mSlices(slices), mStacks(stacks), mNumberOfVerticesPerSphere(0)
 {
-	mSlices = slices;
-	mStacks = stacks;
-
 	// Create and compile our GLSL program from the shaders
 	mSphereShader = new Shader(Shader::mObjectToDraw::mSphere);
 	std::cout << "mSphereShader\n";
 	mSphereShader->LoadShaders(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/sphere.vs").c_str(), 
 							   DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/sphere.fs").c_str() );
-
 
 }
 
@@ -50,10 +47,10 @@ DrawableSpheres::~DrawableSpheres()
 	mRadius.clear();
 }
 
-void DrawableSpheres::Draw()
+void DrawableSpheres::Draw(const glm::vec3 &lightPos, const glm::vec3 &lightColor)
 {
 	glCheckError2();
-	mSphereShader->DrawShader(&mPosition, &mRadius, &mColor);
+	mSphereShader->DrawShader(&mPosition, &mRadius, &mColor, &lightPos, &lightColor);
 	//mSphereShader->DrawShader();
 }
 
@@ -84,6 +81,7 @@ void DrawableSpheres::Update()
 
 	std::vector<glm::vec3> colors;
 	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec3> normals;
 	std::vector<GLuint> indices;
 
 	float dArc = glm::pi<float>() / samples;
@@ -98,6 +96,7 @@ void DrawableSpheres::Update()
 			glm::vec3 n(r*std::cos(theta), h, r*std::sin(theta));
 
 			vertices.push_back(n);
+			normals.push_back(glm::normalize(n));
 			//colors.push_back(glm::dvec3(1.0));
 			if (i > 0 && j > 0)
 			{
@@ -114,9 +113,13 @@ void DrawableSpheres::Update()
 
 	mNumberOfVerticesPerSphere = vertices.size();
 
-	mSphereShader->SetBuffers(vertices, indices, colors);
+	mSphereShader->SetBuffers(vertices, indices, &colors, &normals);
 	glCheckError2();
 
+	colors.clear();
+	vertices.clear();
+	normals.clear();
+	indices.clear();
     /*std::vector<GLfloat> radius;
     std::vector<glm::vec3> offset;
     std::vector<glm::vec3> colors;
