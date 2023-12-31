@@ -5,20 +5,22 @@
 //#include <qdir.h>
 #include <sys/stat.h>
 #include <filesystem> // iteration over the directory...
+
 // For getting the current directory
 #ifdef _WIN32
-	#include <direct.h>
-	// MSDN recommends against using getcwd & chdir names
-	#define cwd _getcwd
-	#define cd _chdir
-	namespace fs = std::filesystem; // std::tr2::sys; // .. in Visual Studio style
+#include <direct.h>
+// MSDN recommends against using getcwd & chdir names
+#define cwd _getcwd
+#define cd _chdir
+namespace fs = std::filesystem; // .. in Visual Studio style
 #else
-	#include "unistd.h"
-	#include <stdio.h>
-	#define cwd getcwd
-	#define cd chdir
-	#include <dirent.h> // DIR
+#include "unistd.h"
+#include <stdio.h>
+#define cwd getcwd
+#define cd chdir
+#include <dirent.h> // DIR
 #endif
+
 
 
 #include <regex>
@@ -32,22 +34,25 @@ DirUtils::~DirUtils()
 }
 
 
-bool DirUtils::m_PathExists(const std::string &path)
+bool DirUtils::PathExists(const std::string& path)
 {
 	struct stat buffer;
 	return (stat(path.c_str(), &buffer) == 0);
 
 	//return fs::exists(fs::path(path));
+
+	//return QDir(path.c_str()).exists();
 }
-bool DirUtils::m_IsPathRelative(const std::string &path)
+bool DirUtils::IsPathRelative(const std::string& path)
 {
 #ifdef _WIN32
 	return fs::path(path).is_relative();
 #else
 	return (path[0] == '/' ? true : false);
 #endif
+	//return QDir::isRelativePath(path.c_str());
 }
-bool DirUtils::m_IsDirectory(const std::string &path)
+bool DirUtils::IsDirectory(const std::string& path)
 {
 #ifdef _WIN32
 	return fs::is_directory(fs::path(path));
@@ -63,8 +68,9 @@ bool DirUtils::m_IsDirectory(const std::string &path)
 	}
 	return false;
 #endif
+	//return QDir(path.c_str()).isReadable();
 }
-bool DirUtils::m_IsFile(const std::string &path)
+bool DirUtils::IsFile(const std::string& path)
 {
 #ifdef _WIN32
 	return fs::is_regular_file(fs::path(path));
@@ -80,59 +86,90 @@ bool DirUtils::m_IsFile(const std::string &path)
 	}
 	return false;
 #endif
+
+	//return QFileInfo(path.c_str()).isReadable();
 }
 
-void DirUtils::m_DeleteFile(const std::string &path)
+void DirUtils::DeleteFile(const std::string& path)
 {
 #ifdef _WIN32
 	fs::remove(fs::path(path));
 #else
 	if (remove(path.c_str()) != 0)
-		DebugLogger::m_Append("Error deleting file: " + path);
+		DebugLogger::Append("Error deleting file: " + path);
 #endif
 }
-void DirUtils::m_CreateDir(const std::string &path)
+void DirUtils::CreateDir(const std::string& path)
 {
-	if (!m_PathExists(path))
+	if (!PathExists(path))
 	{
 #ifdef _WIN32
 		fs::create_directory(fs::path(path));
 #else
 		int stat = _mkdir(path.c_str());
 		if (stat)
-			DebugLogger::m_Append("Error: Folder not created " + path);
+			DebugLogger::Append("Error: Folder not created " + path);
 #endif
 
+		//QDir(GetParentDir(path).c_str()).mkdir(path.c_str());
 	}
 }
-void DirUtils::m_SetCurrentDir(const std::string &path)
+void DirUtils::SetCurrentDir(const std::string& path)
 {
-	if (m_PathExists(path))
+	if (PathExists(path))
 	{
 		cd(path.c_str());
+		//QDir::setCurrent(path.c_str());
 	}
 }
 
-std::string DirUtils::m_JoinPaths(const std::string &upper_path, const std::string &sub_path)
+std::string DirUtils::JoinPaths(const std::string& upper_path, const std::string& sub_path)
 {
 	if (sub_path.size() == 0) return upper_path;
-	std::string joined{ upper_path + m_GetSeparator() + sub_path };
+	std::string joined{ upper_path + GetSeparator() + sub_path };
 	return joined;
+	//return (fs::path(upper_path) / fs::path(sub_path)).string();
 }
-std::string DirUtils::m_GetCurrentDir()
+std::string DirUtils::GetCurrentDir()
 {
-	/*char buf[4096]; // never know how much is needed
+	char buf[4096]; // never know how much is needed
 	cwd(buf, sizeof buf); // will return the current dir of the project you opened in GoCAD.
 	std::string current{ buf };
-	return current;*/
+	return current;
 
-	//fs::path curr = fs::current_path();
+	// the 3 lines below works as well
+	// #include <experimental/filesystem>
+	//std::experimental::filesystem::v1::path currentPath = std::experimental::filesystem::current_path();
+	//DebugLogger::m_Append(currentPath.generic_string());
+
+	//fs::path curr = fs::current_path(); -> not working
 	//return curr.string();
-	fs::path curr = fs::absolute(".");
-	return curr.string();
 
+	//return QDir::currentPath().toStdString();
+
+
+	/*
+	OBS: the 2 blocks below gives the path to Gocad installation
+
+	char* path;
+	_get_pgmptr(&path);
+	DebugLogger::m_Append(path);
+
+	char result[MAX_PATH];
+	DebugLogger::m_Append(std::string(result, GetModuleFileNameA(NULL, result, MAX_PATH)));
+	*/
 }
-std::string DirUtils::m_GetFileName(const std::string &filepath)
+
+std::string DirUtils::GetMainDir()
+{
+	std::string currentDir = GetCurrentDir();
+	size_t found = currentDir.find("build");
+	if (found != std::string::npos)
+		currentDir = currentDir.substr(0, found - 1);
+	return currentDir;
+}
+
+std::string DirUtils::GetFileName(const std::string& filepath)
 {
 	std::string name{ filepath };
 	// removing the extension
@@ -169,7 +206,7 @@ std::string DirUtils::m_GetFileName(const std::string &filepath)
 	}
 	return name;*/
 }
-std::string DirUtils::m_GetFileExtension(const std::string &filepath)
+std::string DirUtils::GetFileExtension(const std::string& filepath)
 {
 	std::string extension{ filepath };
 	size_t found = extension.find_last_of(".");
@@ -183,12 +220,12 @@ std::string DirUtils::m_GetFileExtension(const std::string &filepath)
 
 	//return fs::path(filepath).extension().substr(1); // I don't want the dot 
 }
-std::string DirUtils::m_GetParentDir(const std::string &filepath)
+std::string DirUtils::GetParentDir(const std::string& filepath)
 {
 	std::string parent_dir{ filepath };
-	std::replace_if(parent_dir.begin(), parent_dir.end(), [](const char a) { return a == '/'; }, m_GetSeparator()[0]);
-	std::replace_if(parent_dir.begin(), parent_dir.end(), [](const char a) { return a == '\\'; }, m_GetSeparator()[0]);
-	size_t found = parent_dir.find_last_of(m_GetSeparator());
+	std::replace_if(parent_dir.begin(), parent_dir.end(), [](const char a) { return a == '/'; }, GetSeparator()[0]);
+	std::replace_if(parent_dir.begin(), parent_dir.end(), [](const char a) { return a == '\\'; }, GetSeparator()[0]);
+	size_t found = parent_dir.find_last_of(GetSeparator());
 	if (found != std::string::npos)
 	{
 		parent_dir = parent_dir.substr(0, found);
@@ -198,8 +235,9 @@ std::string DirUtils::m_GetParentDir(const std::string &filepath)
 	return parent_dir;
 
 	//return fs::path(filepath).parent_path();
+	//return QDir(filepath.c_str()).dirName().toStdString();
 }
-std::string DirUtils::m_GetSeparator()
+std::string DirUtils::GetSeparator()
 {
 	std::string separator{ "" };
 #if _WIN32
@@ -218,7 +256,6 @@ std::vector<std::string> listFilesWindows(fs::path path, bool recursive)
 
 	try
 	{
-		//if (fs::exists(path)) files.push_back(fs::system_complete(path).string());
 		if (fs::exists(path)) files.push_back(fs::absolute(path).string());
 
 		if (fs::is_directory(path))
@@ -226,7 +263,6 @@ std::vector<std::string> listFilesWindows(fs::path path, bool recursive)
 			using iterator = fs::directory_iterator; // < fs::path >;
 			for (iterator iter(path); iter != iterator(); ++iter)
 			{
-				//files.push_back(fs::system_complete(iter->path()).string());
 				files.push_back(fs::absolute(iter->path()).string());
 				if (recursive)
 				{
@@ -247,11 +283,11 @@ std::vector<std::string> listFilesWindows(fs::path path, bool recursive)
 }
 
 #ifndef _WIN32
-std::vector<std::string> listFilesUnix(const std::string &path, bool recursive)
+std::vector<std::string> listFilesUnix(const std::string& path, bool recursive)
 {
 	std::vector<std::string> files;
-	DIR *d;
-	struct dirent *dir;
+	DIR* d;
+	struct dirent* dir;
 	d = opendir(path.c_str());
 	if (d)
 	{
@@ -274,7 +310,7 @@ std::vector<std::string> listFilesUnix(const std::string &path, bool recursive)
 }
 #endif
 // entry point
-std::vector<std::string> DirUtils::m_ListFiles(const std::string &path, bool recursive)
+std::vector<std::string> DirUtils::ListFiles(const std::string& path, bool recursive)
 {
 #ifdef _WIN32
 	return listFilesWindows(fs::path(path), recursive);
@@ -284,7 +320,7 @@ std::vector<std::string> DirUtils::m_ListFiles(const std::string &path, bool rec
 }
 
 
-void DirUtils::m_ReadAllLines(const std::string &filepath, std::vector<std::string> &lines)
+void DirUtils::ReadAllLines(const std::string& filepath, std::vector<std::string>& lines)
 {
 	lines.clear();
 	std::ifstream in_file(filepath);
@@ -298,8 +334,8 @@ void DirUtils::m_ReadAllLines(const std::string &filepath, std::vector<std::stri
 
 
 
-void DirUtils::m_Tokenize(const std::string &text, const std::string &delimiters,
-	std::vector<std::string> &tokenized)
+void DirUtils::Tokenize(const std::string& text, const std::string& delimiters,
+	std::vector<std::string>& tokenized)
 {
 	tokenized.clear();
 	if (delimiters.size() == 0) return;
@@ -339,3 +375,5 @@ void DirUtils::m_Tokenize(const std::string &text, const std::string &delimiters
 	//           std::sregex_token_iterator(),
 	//           std::ostream_iterator<std::string>(std::cout, "\n"));
 }
+
+

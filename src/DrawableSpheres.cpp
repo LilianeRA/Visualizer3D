@@ -34,8 +34,8 @@ DrawableSpheres::DrawableSpheres(const std::string &name, int slices, int stacks
 	// Create and compile our GLSL program from the shaders
 	mSphereShader = new Shader(Shader::mObjectToDraw::mSphere);
 	std::cout << "mSphereShader\n";
-	mSphereShader->LoadShaders(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/sphere.vs").c_str(), 
-							   DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/sphere.fs").c_str() );
+	mSphereShader->LoadShaders(DirUtils::JoinPaths(DirUtils::GetMainDir(), "shaders/sphere.vs").c_str(),
+							   DirUtils::JoinPaths(DirUtils::GetMainDir(), "shaders/sphere.fs").c_str() );
 	mName = name;
 	SetBuffers();
 }

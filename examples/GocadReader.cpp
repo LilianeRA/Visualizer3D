@@ -58,7 +58,7 @@ void add_to_list(std::vector<glm::vec3> &vertices, const glm::vec3 &pt, std::vec
 
 void GocadReader::ReadDebugLogger(const std::string &filepath)
 {
-	if (!DirUtils::m_IsFile(filepath))
+	if (!DirUtils::IsFile(filepath))
 	{
 		std::cout << "Debug file not found!\n";
 		return;

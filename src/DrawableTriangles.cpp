@@ -10,8 +10,8 @@ DrawableTriangles::DrawableTriangles(const std::string &name)
 	// Create and compile our GLSL program from the shaders
 	mTriangleShader = new Shader(Shader::mObjectToDraw::mTriangle);
 	std::cout << "mTriangleShader\n";
-	mTriangleShader->LoadShaders(DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/triangle.vs").c_str(),
-								 DirUtils::m_JoinPaths(DirUtils::m_GetCurrentDir(), "../../shaders/triangle.fs").c_str());
+	mTriangleShader->LoadShaders(DirUtils::JoinPaths(DirUtils::GetMainDir(), "shaders/triangle.vs").c_str(),
+								 DirUtils::JoinPaths(DirUtils::GetMainDir(), "shaders/triangle.fs").c_str());
 
 	mName = name;
 	mWireframe = new DrawableLines(name+" wireframe");

@@ -1,6 +1,7 @@
 include(FetchContent)
-cmake_minimum_required(VERSION 3.20)
-project(OpenGLCamera)
+cmake_minimum_required(VERSION 3.23)
+
+project(Visualizer3D VERSION 0.0.1 DESCRIPTION "A 3D visualizer using ImGUI, GLFW, GLAD and OpenGL.")
 #--- CMake configuration
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
@@ -16,8 +17,11 @@ FetchContent_Declare(
         GIT_TAG master
 )
 
+option(BUILD_EXAMPLES "Build the example programs" ON)
+
 FetchContent_MakeAvailable(imgui)
 add_subdirectory(extern/imgui)
+include_directories(extern/imgui)
 
 
 #--- GLAD
@@ -40,14 +44,44 @@ include_directories(${IMGUI_DIRECTORY})
 
 set(LIBRARIES ${OPENGL_LIBRARIES} imgui)
 
-#add_subdirectory(extern/imgui)
+
 #--- Build example
+if (BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+
+
 include_directories(.)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/shaders)
 file(GLOB HEADERS ${CMAKE_SOURCE_DIR}/*.h ${CMAKE_SOURCE_DIR}/include/*.h)
 file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/src/*.cpp)
-add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
+
+# setting the install path inside the current directory
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "install prefix" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
+# build the library
+add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES} )
+add_library(${PROJECT_NAME}_s STATIC ${HEADERS} ${SOURCES} )
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+
+# setting all the headers as available to be read by the client
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/include/")
+
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+    PUBLIC_HEADER "${HEADERS}"
+)
+
+install (TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_s
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    PUBLIC_HEADER DESTINATION include
+)
+
 
