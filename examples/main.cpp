@@ -1,6 +1,6 @@
 #include <iostream>
 #include "DirUtils.h"
-#include "WindowGLFW.h"
+#include "CustomWindow.h"
 #include "GocadReader.h"
 
 
@@ -9,7 +9,7 @@ int main(int argc, char** args)
 	std::cout << DirUtils::GetCurrentDir() << std::endl;
 	std::cout << DirUtils::GetMainDir() << std::endl;
 
-	WindowGLFW *glfw = new WindowGLFW(false, "teste", 1080, 720);
+	CustomWindow *glfw = new CustomWindow(false, "gocad_demo", 1080, 720);
 	glfw->InitializeWindow(); // will init GLEW and GLFW
 
 	std::cout << "GocadReader\n";

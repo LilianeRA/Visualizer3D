@@ -22,9 +22,13 @@ class WindowGLFW
         void AppendDrawableLine(DrawableLines *dl);
 		void AppendDrawableSphere(DrawableSpheres *ds);
 		void AppendDrawableTriangle(DrawableTriangles *dt);
+		void AddCheckbox(const std::string& title, bool value);
+
         void Run();
 
+
     protected:
+        virtual void SetCustomWindow();
 
     private:
         bool mWindowInitialized;
@@ -57,18 +61,23 @@ class WindowGLFW
 		glm::vec3 mLightColor;
 		float mEnvelopeTransparency;
 		//float mGridTransparency;
-		bool mEnvelopeWireframe;
+		//bool mEnvelopeWireframe;
 		bool mGridLines;
+
+        std::vector<std::pair<const std::string, bool>> mCheckboxList;
         
 
         std::vector<DrawableLines*> mOtherLines;
 		std::vector<DrawableSpheres*> mOtherSpheres;
 		std::vector<DrawableTriangles*> mOtherTriangles;
 
+        void ShowBasicInfo();
+        //void ShowCustomInfo();
+
         void Draw();
         void Update();
         void Shutdown();
-        void Exit();///~/Documentos/ProjetosCB/Nanotubes/build
+        void Exit(); 
 
         void ResetTime();
         void GetTime(timePoint& time) const;
