@@ -16,14 +16,14 @@ class DrawableLines
         DrawableLines(const std::string &name);
         virtual ~DrawableLines();
         
-        void PushLine(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color);
+        void PushLine(const glm::vec3 &pos1, const glm::vec3 &pos2, const  glm::vec3 &color);
 		void Update();
         void Draw();
 
         int GetTotalLines();
         std::string GetName();
 
-        void UpdateLinePosition(int index, glm::vec3 pos1, glm::vec3 pos2);
+        void UpdateLinePosition(int index, const glm::vec3& pos1, const glm::vec3& pos2);
         void RotateLinePosition(int index, const glm::dmat3 &rotation, const glm::dvec3 &rot_pt);
         void TranslateLinePosition(int index, const glm::vec3 &translation);
         /*void PopLine();

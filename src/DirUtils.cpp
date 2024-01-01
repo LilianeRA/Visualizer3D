@@ -250,7 +250,7 @@ std::string DirUtils::GetSeparator()
 }
 
 // recursive implementation
-std::vector<std::string> listFilesWindows(fs::path path, bool recursive)
+static std::vector<std::string> listFilesWindows(fs::path path, bool recursive)
 {
 	std::vector<std::string> files;
 
@@ -283,7 +283,7 @@ std::vector<std::string> listFilesWindows(fs::path path, bool recursive)
 }
 
 #ifndef _WIN32
-std::vector<std::string> listFilesUnix(const std::string& path, bool recursive)
+static std::vector<std::string> listFilesUnix(const std::string& path, bool recursive)
 {
 	std::vector<std::string> files;
 	DIR* d;

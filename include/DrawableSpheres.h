@@ -3,10 +3,10 @@
 
 #include "Shader.h"
 //GLM Math Headers
-#include <glm/vec3.hpp> // glm::vec3
-#include <glm/vec4.hpp> // glm::vec4
-#include <glm/mat4x4.hpp> // glm::mat4
-#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
+#include "glm/vec3.hpp" // glm::vec3
+#include "glm/vec4.hpp" // glm::vec4
+#include "glm/mat4x4.hpp" // glm::mat4
+#include "glm/gtc/matrix_transform.hpp" // glm::translate, glm::rotate, glm::scale, glm::perspective
 
 
 class DrawableSpheres
@@ -17,10 +17,10 @@ class DrawableSpheres
         
         void Draw(const glm::vec3 &lightPos, const glm::vec3 &lightColor);
 
-        void PushSphere(glm::vec3 position, glm::vec3 color, float radius);
+        void PushSphere(const glm::vec3 &position, const glm::vec3 &color, float radius);
         void RotateSpherePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt);
-        void TranslateSpherePosition(int index, glm::vec3 position);
-        void UpdateSpherePosition(int index, glm::vec3 position);
+        void TranslateSpherePosition(int index, const glm::vec3 &position);
+        void UpdateSpherePosition(int index, const glm::vec3 &position);
 
         int GetTotalSpheres();
         std::string GetName();

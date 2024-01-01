@@ -25,7 +25,7 @@ void DrawableLines::Draw()
 }
 
 
-void DrawableLines::PushLine(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color)
+void DrawableLines::PushLine(const glm::vec3& pos1, const glm::vec3& pos2, const glm::vec3 &color)
 {
 	mLine *line = new mLine();
 	line->mPosition1 = pos1;
@@ -75,7 +75,7 @@ std::string DrawableLines::GetName()
 {
 	return mName;
 }
-void DrawableLines::UpdateLinePosition(int index, glm::vec3 pos1, glm::vec3 pos2)
+void DrawableLines::UpdateLinePosition(int index, const glm::vec3& pos1, const glm::vec3& pos2)
 {
 	if(index < 0 || index >= mLineData.size()) return;
 	mLineData.at(index)->mPosition1 = pos1;

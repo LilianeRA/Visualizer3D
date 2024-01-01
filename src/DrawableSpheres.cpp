@@ -55,7 +55,7 @@ void DrawableSpheres::Draw(const glm::vec3 &lightPos, const glm::vec3 &lightColo
 	//mSphereShader->DrawShader();
 }
 
-void DrawableSpheres::PushSphere(glm::vec3 position, glm::vec3 color, float radius)
+void DrawableSpheres::PushSphere(const glm::vec3 &position, const glm::vec3 &color, float radius)
 {
 	/*mSphere *sphere = new mSphere();
 	sphere->mPosition = position;
@@ -154,7 +154,7 @@ std::string DrawableSpheres::GetName()
 	return mName;
 }
 
-void DrawableSpheres::UpdateSpherePosition(int index, glm::vec3 position)
+void DrawableSpheres::UpdateSpherePosition(int index, const  glm::vec3 &position)
 {
 	if(index < 0 || index >= mPosition.size()) return;
 	mPosition.at(index) = position;
@@ -170,7 +170,7 @@ void DrawableSpheres::RotateSpherePosition(int index, const glm::mat3 &rotation,
 }
 
 
-void DrawableSpheres::TranslateSpherePosition(int index, glm::vec3 position)
+void DrawableSpheres::TranslateSpherePosition(int index, const glm::vec3 &position)
 {
 	if(index < 0 || index >= mPosition.size()) return;
 	mPosition.at(index) += position;

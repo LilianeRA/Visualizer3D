@@ -11,20 +11,20 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
-FetchContent_Declare(
-        imgui
-        GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG master
-)
+#FetchContent_Declare(
+#        imgui
+#        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+#        GIT_TAG master
+#)
 
 option(BUILD_EXAMPLES "Build the example programs" ON)
 
-FetchContent_MakeAvailable(imgui)
-add_subdirectory(extern/imgui)
-include_directories(extern/imgui)
+#FetchContent_MakeAvailable(imgui)
+#add_subdirectory(extern/imgui)
+#include_directories(extern/imgui)
 
 
-#--- GLAD
+#--- GLAD 
 find_package(GLAD REQUIRED)
 include_directories(${GLAD_INCLUDE_DIR})
 #--- GLM
@@ -39,11 +39,12 @@ include_directories(${OpenGL_INCLUDE_DIR})
 #--- GLFW
 find_package(GLFW REQUIRED)
 include_directories(${GLFW_INCLUDE_DIR})
+#--- ImGUI
+find_package(IMGUI REQUIRED)
+include_directories(${IMGUI_INCLUDE_DIR})
 
-include_directories(${IMGUI_DIRECTORY})
-
-set(LIBRARIES ${OPENGL_LIBRARIES} imgui)
-
+#set(LIBRARIES imgui ${OPENGL_LIBRARIES} )
+set(LIBRARIES ${IMGUI_LIBRARY} ${GLFW_LIBRARY} ${GLAD_LIBRARY})
 
 #--- Build example
 if (BUILD_EXAMPLES)
@@ -65,19 +66,23 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "install prefi
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # build the library
-add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES} )
-add_library(${PROJECT_NAME}_s STATIC ${HEADERS} ${SOURCES} )
-target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
+add_library(${PROJECT_NAME}_s STATIC ${HEADERS} ${SOURCES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})
 
 # setting all the headers as available to be read by the client
-target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/include/")
+target_include_directories(${PROJECT_NAME} PRIVATE ${HEADERS})
+target_link_directories(${PROJECT_NAME} PRIVATE ${SOURCES})
 
-set_target_properties(${PROJECT_NAME}
-    PROPERTIES
-    PUBLIC_HEADER "${HEADERS}"
+# IMPORTED_LINK_DEPENDENT_LIBRARIES brings the libs inported here to the code that will use this lib.
+set_target_properties(${PROJECT_NAME} 
+    PROPERTIES IMPORTED_LINK_DEPENDENT_LIBRARIES ${LIBRARIES}
+    #PUBLIC_HEADER "${HEADERS}"
+    PUBLIC_HEADER "${CMAKE_SOURCE_DIR}/Visualizer3D.h"
 )
 
 install (TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_s
+    #FILES "${CMAKE_SOURCE_DIR}/${PROJECT_NAME}Config.cmake" DESTINATION lib/cmake/${PROJECT_NAME}
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib

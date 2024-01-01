@@ -15,7 +15,7 @@ typedef std::chrono::high_resolution_clock::time_point timePoint;
 class WindowGLFW
 {
     public:
-        WindowGLFW(bool bidimensional, const std::string &title, int width = 800, int height = 600);
+        WindowGLFW(bool bidimensional, const std::string &title, int width = 1080, int height = 720);
         virtual ~WindowGLFW();
 
         void InitializeWindow();
