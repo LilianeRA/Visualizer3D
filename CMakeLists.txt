@@ -71,14 +71,23 @@ add_library(${PROJECT_NAME}_s STATIC ${HEADERS} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})
 
 # setting all the headers as available to be read by the client
-target_include_directories(${PROJECT_NAME} PRIVATE ${HEADERS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${HEADERS})
 target_link_directories(${PROJECT_NAME} PRIVATE ${SOURCES})
+
+set(PUBLIC_HEADERS 
+	"${CMAKE_SOURCE_DIR}/include/WindowGLFW.h"
+	"${CMAKE_SOURCE_DIR}/include/DrawableSpheres.h"
+	"${CMAKE_SOURCE_DIR}/include/DrawableLines.h"
+	"${CMAKE_SOURCE_DIR}/include/DrawableTriangles.h"
+	"${CMAKE_SOURCE_DIR}/include/Camera3D.h"
+	"${CMAKE_SOURCE_DIR}/include/Shader.h"
+	"${CMAKE_SOURCE_DIR}/include/Mouse.h")
 
 # IMPORTED_LINK_DEPENDENT_LIBRARIES brings the libs inported here to the code that will use this lib.
 set_target_properties(${PROJECT_NAME} 
     PROPERTIES IMPORTED_LINK_DEPENDENT_LIBRARIES ${LIBRARIES}
     #PUBLIC_HEADER "${HEADERS}"
-    PUBLIC_HEADER "${CMAKE_SOURCE_DIR}/Visualizer3D.h"
+    PUBLIC_HEADER "${PUBLIC_HEADERS}"
 )
 
 install (TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_s
