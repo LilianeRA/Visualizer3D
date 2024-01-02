@@ -31,11 +31,6 @@ WindowGLFW::WindowGLFW(bool bidimensional, const std::string &title, int width, 
     mMouse = nullptr;*/
 	mLightSphere = nullptr;
 	mAxis = nullptr;
-	mEnvelopeTransparency = 1.0f;
-	//mGridTransparency = 0.5f;
-	//mEnvelopeWireframe = false;
-	mGridLines = false;
-
 
 	mLightPos = glm::vec3{ 102.0f, 100.0f, 200.0f };
 	mLightColor = glm::vec3{ 1.0f, 1.0f, 1.0f };
@@ -225,7 +220,7 @@ void WindowGLFW::InitializeSpheresShaders()
 	mLightSphere->PushSphere(mLightPos, mLightColor, 2.0);
 }
 
-void WindowGLFW::AddCheckbox(const std::string &title, bool value)
+/*void WindowGLFW::AddCheckbox(const std::string &title, bool value)
 {
     if (mCheckboxList.size() == 0)
     {
@@ -244,21 +239,22 @@ void WindowGLFW::AddCheckbox(const std::string &title, bool value)
             mCheckboxList.push_back(std::pair<const std::string, bool>(title, value));
         }
     }
-}
+}*/
 
 
 void WindowGLFW::SetCustomWindow()
 {
-
+}
+void WindowGLFW::CustomDraw()
+{
+}
+void WindowGLFW::CustomShutdown()
+{
 }
 
-void WindowGLFW::ShowBasicInfo()
+/*void WindowGLFW::ShowBasicInfo(ImVec4 &clear_color, bool &ortho_proj)
 {
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-
-    ImGui::Begin("Basic Info");                          // Create a window called "Hello, world!" and append into it.
-
-    /*
+    
     static int counter = 0;
     ImGui::Text("Light configurations");               // Display some text (you can use a format strings too)
     //ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
@@ -266,27 +262,19 @@ void WindowGLFW::ShowBasicInfo()
     //ImGui::SliderFloat("Grid Transparency", &mGridTransparency, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
     ImGui::SliderFloat("Envelope Transparency", &mEnvelopeTransparency, 0.0f, 1.0f);
     //ImGui::Checkbox("Envelope Lines", &mEnvelopeWireframe);
-    ImGui::Checkbox("Grid lines", &mGridLines);
-    ImGui::Checkbox("Orthographic Projection", &ortho_proj);
     // custom checkboxes
     for (auto& c : mCheckboxList)
     {
         ImGui::Checkbox(c.first.c_str(), &c.second);
     }
-    ImGui::SliderFloat3("Light Pos", &mLightPos.x, -200.0f, 200.0f);
-    ImGui::ColorEdit3("Light Color", (float*)&mLightColor); // Edit 3 floats representing a color
-    ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
     if (ImGui::Button("Reset"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
         counter++;
     ImGui::SameLine();
-    ImGui::Text("counter = %d", counter);*/
+    ImGui::Text("counter = %d", counter);
 
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-    ImGui::End();
-
-}
+}*/
 
 
 /// EXECUTION
@@ -321,7 +309,20 @@ void WindowGLFW::Run()
 
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 		{
-            ShowBasicInfo();
+            ImGui::SetNextWindowPos(ImVec2(0, 0));
+
+            ImGui::Begin("Basic Configuration");                          // Create a window called "Hello, world!" and append into it.
+
+            ImGui::Checkbox("Orthographic Projection", &ortho_proj);
+            ImGui::ColorEdit3("Clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+            ImGui::Text("Light configurations");               // Display some text (you can use a format strings too)
+            ImGui::SliderFloat3("Light Pos", &mLightPos.x, -200.0f, 200.0f);
+            ImGui::ColorEdit3("Light Color", (float*)&mLightColor); // Edit 3 floats representing a color
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+            ImGui::End();
 		}
 		{
             SetCustomWindow();
@@ -395,30 +396,7 @@ void WindowGLFW::Draw()
 	mAxis->Draw();
 	mLightSphere->Draw(mLightPos, mLightColor);
 	
-    // for the virtual function
-	for (const auto dl : mOtherLines)
-	{
-		if(dl->GetName().find("Grid") == std::string::npos)
-			dl->Draw();
-		else
-			if(mGridLines)
-				dl->Draw();
-		//dl->Draw();
-	}
-	for(const auto ds : mOtherSpheres)
-	{
-	    ds->Draw(mLightPos, mLightColor);
-	}
-	for (const auto dt : mOtherTriangles) 
-	{
-        /*if (dt->GetName().find("Envelope") != std::string::npos)
-        {
-		    dt->Draw(mLightPos, mLightColor, mEnvelopeTransparency, mEnvelopeWireframe);
-        }*/
-		//else if(dt->GetName().find("Grid") != std::string::npos)
-		//    dt->Draw(mLightPos, mLightColor, mGridTransparency, mGridLines);
-	}
-
+    CustomDraw();
 
 
     if(nada)
@@ -540,34 +518,7 @@ void WindowGLFW::MouseCallback(GLFWwindow * window, double x, double y)
     mStaticWindow->MouseUpdate();
 }
 
-void WindowGLFW::AppendDrawableLine(DrawableLines *dl)
-{
-    if(dl)
-    {
-        mOtherLines.push_back(dl);
-        std::cout<< "mOtherLines " << mOtherLines.size()<<std::endl;
-    }
-}   
 
-void WindowGLFW::AppendDrawableSphere(DrawableSpheres *ds)
-{
-    if(ds)
-    {
-        mOtherSpheres.push_back(ds);
-        std::cout<< "mOtherSpheres " << mOtherSpheres.size()<<std::endl;
-    }
-
-}
-
-void WindowGLFW::AppendDrawableTriangle(DrawableTriangles *dt)
-{
-    if(dt)
-    {
-		mOtherTriangles.push_back(dt);
-    }
-    std::cout<< "mOtherTriangles "<< mOtherTriangles.size()<<std::endl;
-
-}
 
 /// TERMINATE
 void WindowGLFW::Shutdown()
@@ -586,15 +537,8 @@ void WindowGLFW::Shutdown()
 	// Cleanup VBO and shader
 	delete mLightSphere;
 	delete mAxis;
-	for(auto dl : mOtherLines)
-	    delete dl;
-	mOtherLines.clear();
-	for(auto ds : mOtherSpheres)
-	    delete ds;
-	mOtherSpheres.clear();
-	for(auto dt : mOtherTriangles)
-	    delete dt;
-	mOtherTriangles.clear();
+
+    CustomShutdown();
 }
 
 void WindowGLFW::Exit()
