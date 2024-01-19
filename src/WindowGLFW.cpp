@@ -291,7 +291,7 @@ void WindowGLFW::Run()
     InitializeSpheresShaders();
 
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-	//bool show_demo_window = false;
+	bool show_demo_window = false;
 	bool ortho_proj = false;
 	mMoveCamera = false;
     while (!glfwWindowShouldClose(mWindow))
@@ -304,8 +304,8 @@ void WindowGLFW::Run()
 
         mMoveCamera = !ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive();
 
-		//if (show_demo_window)
-		//	ImGui::ShowDemoWindow(&show_demo_window);
+		if (show_demo_window)
+			ImGui::ShowDemoWindow(&show_demo_window);
 
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 		{
@@ -321,7 +321,6 @@ void WindowGLFW::Run()
             ImGui::ColorEdit3("Light Color", (float*)&mLightColor); // Edit 3 floats representing a color
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
             ImGui::End();
 		}
 		{
