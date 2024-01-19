@@ -154,6 +154,43 @@ std::string DrawableSpheres::GetName()
 	return mName;
 }
 
+/*void DrawableSpheres::ApplyTransformation(const glm::dmat3& transformation)
+{
+	glm::vec3 centroid = ComputeCentroid();
+	for (const glm::dvec3 &pos : mPosition)
+	{
+		glm::dvec3 newpos = pos;
+		newpos -= centroid;
+		newpos = transformation * newpos;
+		newpos += centroid;
+	}
+}*/
+
+glm::vec3 DrawableSpheres::ComputeCentroid() const
+{
+	glm::vec3 centroid(0.0, 0.0, 0.0);
+
+	for (const auto& p : mPosition)
+	{
+		centroid += p;
+	}
+	centroid /= (double)mPosition.size();
+
+	return centroid;
+}
+
+DrawableSpheres* DrawableSpheres::Copy() const
+{
+	DrawableSpheres *copyDrawableSpheres = new DrawableSpheres(mName);
+
+	for (int i = 0; i < mPosition.size(); ++i)
+	{
+		copyDrawableSpheres->PushSphere(mPosition.at(i), mColor.at(i), mRadius.at(i));
+	}
+
+	return copyDrawableSpheres;
+}
+
 void DrawableSpheres::UpdateSpherePosition(int index, const  glm::vec3 &position)
 {
 	if(index < 0 || index >= mPosition.size()) return;

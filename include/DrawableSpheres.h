@@ -24,6 +24,10 @@ class DrawableSpheres
 
         int GetTotalSpheres();
         std::string GetName();
+
+        glm::vec3 ComputeCentroid() const;
+        DrawableSpheres* Copy() const;
+        //void ApplyTransformation(const glm::dmat3& transformation);
         /*void PopSphere();
 
 
@@ -53,6 +57,7 @@ class DrawableSpheres
         int mSlices;
         int mStacks;
 		unsigned int mNumberOfVerticesPerSphere;
+
 
 		void SetBuffers();
 		//void mCreateSphere(float radius, std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &colors, std::vector<GLuint> &indices);

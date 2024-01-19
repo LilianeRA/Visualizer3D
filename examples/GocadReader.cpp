@@ -600,43 +600,43 @@ DrawableTriangles* GocadReader::GetEnvelopeTriangles()
 }*/
 
 void GocadReader::m_Tokenize(const std::string &text, const std::string &delimiters, std::vector<std::string> &tokenized)
+{
+	tokenized.clear();
+	if (delimiters.size() == 0) return;
+
+	// [\\s,]+ means the white space and "," are delimiters
+
+	std::string delimiters_{ delimiters };
+	// replacing the white space with the symbol of white space in between []+
+	size_t f = delimiters.find(" ");
+	if (f != std::string::npos)
 	{
-		tokenized.clear();
-		if (delimiters.size() == 0) return;
-
-		// [\\s,]+ means the white space and "," are delimiters
-
-		std::string delimiters_{ delimiters };
-		// replacing the white space with the symbol of white space in between []+
-		size_t f = delimiters.find(" ");
-		if (f != std::string::npos)
-		{
-			// replacing the content from/to with some string
-			delimiters_.replace(f, f + 1, "\\s");
-		}
-		delimiters_ = "[" + delimiters_ + "]+";
-
-		// setting the regular expression
-		const std::regex ws_re(delimiters_);
-		// std::copy do a thing for every element.
-		// Don't worry, empty strings are not added
-		std::copy(std::sregex_token_iterator(text.begin(), text.end(), ws_re, -1),
-			std::sregex_token_iterator(),
-			std::back_inserter(tokenized));
-		/*
-		const std::regex ws_re("\\s+"); // whitespace
-		std::sregex_token_iterator tok_it = std::sregex_token_iterator(text.begin(), text.end(), ws_re, -1);
-		while(tok_it != std::sregex_token_iterator())
-		{
-		//LOG(tok_it);
-		std::cout<< *tok_it <<std::endl;
-		tok_it++;
-		}
-		*/
-
-		//const std::regex ws_re("\\s+"); // whitespace
-		//std::copy( std::sregex_token_iterator(text.begin(), text.end(), ws_re, -1),
-		//           std::sregex_token_iterator(),
-		//           std::ostream_iterator<std::string>(std::cout, "\n"));
+		// replacing the content from/to with some string
+		delimiters_.replace(f, f + 1, "\\s");
 	}
+	delimiters_ = "[" + delimiters_ + "]+";
+
+	// setting the regular expression
+	const std::regex ws_re(delimiters_);
+	// std::copy do a thing for every element.
+	// Don't worry, empty strings are not added
+	std::copy(std::sregex_token_iterator(text.begin(), text.end(), ws_re, -1),
+		std::sregex_token_iterator(),
+		std::back_inserter(tokenized));
+	/*
+	const std::regex ws_re("\\s+"); // whitespace
+	std::sregex_token_iterator tok_it = std::sregex_token_iterator(text.begin(), text.end(), ws_re, -1);
+	while(tok_it != std::sregex_token_iterator())
+	{
+	//LOG(tok_it);
+	std::cout<< *tok_it <<std::endl;
+	tok_it++;
+	}
+	*/
+
+	//const std::regex ws_re("\\s+"); // whitespace
+	//std::copy( std::sregex_token_iterator(text.begin(), text.end(), ws_re, -1),
+	//           std::sregex_token_iterator(),
+	//           std::ostream_iterator<std::string>(std::cout, "\n"));
+}
 
