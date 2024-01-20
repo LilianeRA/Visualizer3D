@@ -197,6 +197,12 @@ void DrawableSpheres::UpdateSpherePosition(int index, const  glm::vec3 &position
 	mPosition.at(index) = position;
 }
 
+void DrawableSpheres::SetSphereColor(int index, const glm::vec3& color)
+{
+	if (index < 0 || index >= mPosition.size()) return;
+	mColor.at(index) = color;
+}
+
 void DrawableSpheres::RotateSpherePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt)
 {
 	if(index < 0 || index >= mPosition.size()) return;

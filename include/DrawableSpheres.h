@@ -21,6 +21,7 @@ class DrawableSpheres
         void RotateSpherePosition(int index, const glm::mat3 &rotation, const glm::vec3 &rot_pt);
         void TranslateSpherePosition(int index, const glm::vec3 &position);
         void UpdateSpherePosition(int index, const glm::vec3 &position);
+        void SetSphereColor(int index, const glm::vec3& color);
 
         int GetTotalSpheres();
         std::string GetName();
